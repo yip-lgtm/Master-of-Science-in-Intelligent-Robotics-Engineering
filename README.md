@@ -48,5 +48,4 @@
 ## Cron Jobs
 
 - Daily: 9:00 AM (HK) — MW Class I Daily Study
-- Weekly (Fri): 3:00 PM — Kam Tat Project Update
 - Weekly (Fri): 5:00 PM — GitHub Backup
