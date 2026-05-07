@@ -2,7 +2,7 @@
 
 ## 最終目標
 
-透過 MW 1.6 → 1.1 → 1.5 → 1.27 四個核心項目 + 其他重點item，親手完成 8–10 份完整 RSE calculation report（PR4 附夾結構計算詳細資料），全面掌握 Class I 常見結構項目寫法，最終拿到「OpenClaw Skill Cron 自學 Bootcamp 結業證書」+ 進階項目（e.g. MW 1.17 懸臂平板）。
+透過 MW 1.6 → 1.1 → 1.5 → 1.27 四個核心項目 + 所有item，親手完成 allitem完整 RSE calculation report（PR4 附夾結構計算詳細資料），全面掌握 Class I 常見結構項目寫法，最終拿到「OpenClaw Skill Cron 自學 Bootcamp 結業證書」+ 所有項目（e.g. MW 1.17 懸臂平板）。
 
 ---
 
@@ -17,7 +17,7 @@
 
 ---
 
-## 其他重點item（6個高頻 RSE 計算項目）
+## 所有item（6個高頻 RSE 計算項目）
 
 | MW No. | 項目 | 描述 |
 |--------|------|------|
@@ -101,4 +101,4 @@ Class II & III Minor Works 推荐图则 - see MWTGe.pdf pages 127-238
 
 完成全部 10 個項目後，發「OpenClaw Skill Cron 自學 Bootcamp 結業證書」
 
-進階項目：MW 1.17 (懸臂板修復)、MW 1.11 (基礎設計) 等
+所有項目：MW 1.17 (懸臂板修復)、MW 1.11 (基礎設計) 等
