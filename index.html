@@ -3,30 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PolyU MSc IRE - Embodied Robot Intelligence Demo</title>
+    <title>PolyU MSc IRE Week 1 - Gary Embodied Demo</title>
     <style>
-        body { margin:0; background:#191925; color:#fff; font-family:"Microsoft YaHei",sans-serif; text-align:center; overflow-x:hidden; }
-        canvas { display:block; margin:10px auto; border:4px solid #4a90e2; border-radius:12px; background:#111; max-width:100%; height:auto; }
-        .info { position:absolute; top:15px; left:15px; right:15px; background:rgba(0,0,0,0.85); padding:12px; border-radius:12px; line-height:1.6; font-size:15px; }
-        button { padding:18px 40px; font-size:22px; margin:15px auto; background:#4a90e2; color:white; border:none; border-radius:12px; cursor:pointer; width:90%; max-width:400px; display:block; }
-        h1 { margin:15px 0 5px; font-size:1.4em; }
-        h3 { color:#4a90e2; margin:0; }
+        body { margin:0; background:#0f172a; color:#fff; font-family:"Microsoft YaHei",sans-serif; text-align:center; }
+        canvas { display:block; margin:10px auto; border:4px solid #4a90e2; border-radius:16px; background:#111827; max-width:100%; }
+        .info { position:absolute; top:15px; left:15px; right:15px; background:rgba(15,23,42,0.95); padding:12px; border-radius:12px; font-size:15px; line-height:1.5; }
+        button { padding:18px 30px; font-size:20px; margin:15px auto; background:#4a90e2; color:white; border:none; border-radius:12px; cursor:pointer; width:90%; max-width:420px; }
+        h1 { margin:15px 0 5px; font-size:1.35em; }
+        .gary { color:#f59e0b; font-weight:bold; }
     </style>
 </head>
 <body>
-    <h1>PolyU MSc IRE</h1>
-    <h3>Week 1 • Embodied Robot Intelligence Demo</h3>
-
+    <h1>PolyU MSc IRE Week 1</h1>
+    <h3 style="color:#4a90e2;">Embodied Robot Intelligence • Gary 倉庫機械人教學 Demo</h3>
     <canvas id="game" width="900" height="600"></canvas>
 
     <div class="info">
         <div id="perception">👁️ Perception 感知: Waiting...</div>
         <div id="think">🤖 LLM Think 思考: Waiting...</div>
         <div id="action">⚡ Action 動作: Waiting...</div>
-        <div id="position" style="margin-top:8px; color:#aaa; font-size:14px;">📍 Position: (150, 300)</div>
+        <div id="position" style="margin-top:8px; color:#f59e0b;">📍 Gary Position: (150, 300)</div>
+        <div style="margin-top:12px; font-size:13px; color:#94a3b8;">
+            真實案例：Figure 03 "Gary" 正在倉庫全自主分揀包裹
+        </div>
     </div>
 
-    <button onclick="runCycle()">🚀 執行一次完整循環<br><small>Perception → LLM Think → Action</small></button>
+    <button onclick="runGaryCycle()">🚀 模擬 Gary 一次完整工作循環</button>
+    <p style="color:#64748b; margin-top:8px;">按 SPACE 或點擊按鈕 → 觀察 Perception → Think → Action</p>
 
 <script>
 const canvas = document.getElementById("game");
@@ -40,16 +43,20 @@ const obstacle = { x: 400, y: 220, w: 80, h: 80 };
 const target = { x: 650, y: 320, w: 60, h: 60 };
 
 function perceive() {
-    const vision = ["clear", "red cube", "obstacle ahead"][Math.floor(Math.random()*3)];
-    const touch = ["clear", "obstacle", "object"][Math.floor(Math.random()*3)];
+    const vision = ["clear", "red package ahead", "obstacle ahead"][Math.floor(Math.random()*3)];
+    const touch = ["clear", "obstacle", "package detected"][Math.floor(Math.random()*3)];
     lastPerception = `Vision: ${vision} | Touch: ${touch}`;
     return { vision, touch };
 }
 
 function llmThink(sensors) {
-    if (sensors.touch === "obstacle") return { action: "move", dx: -90, dy: 0, reason: "避開障礙" };
-    else if (sensors.touch === "object") return { action: "close", force: 60, reason: "夾取目標" };
-    else return { action: "move", dx: 110, dy: 0, reason: "前進" };
+    if (sensors.touch === "obstacle") {
+        return { action: "move", dx: -85, dy: 0, reason: "避開障礙物（Gary 真實行為）" };
+    } else if (sensors.touch === "package detected") {
+        return { action: "close", force: 65, reason: "夾取包裹（Gary 分揀動作）" };
+    } else {
+        return { action: "move", dx: 105, dy: 0, reason: "前進至下一個包裹" };
+    }
 }
 
 function execute(cmd) {
@@ -62,51 +69,65 @@ function execute(cmd) {
     lastAction = `${cmd.action.toUpperCase()} | ${cmd.reason}`;
 }
 
-function runCycle() {
+function runGaryCycle() {
     const sensors = perceive();
     const cmd = llmThink(sensors);
     lastThink = `LLM Think: ${cmd.reason}`;
     execute(cmd);
     
     document.getElementById("perception").innerText = `👁️ Perception 感知: ${lastPerception}`;
-    document.getElementById("think").innerText = `🤖 LLM Think 思考: ${lastThink}`;
+    document.getElementById("think").innerText = `���� LLM Think 思考: ${lastThink}`;
     document.getElementById("action").innerText = `⚡ Action 動作: ${lastAction}`;
-    document.getElementById("position").innerText = `📍 Position: (${Math.round(agent.x)}, ${Math.round(agent.y)})`;
+    document.getElementById("position").innerText = `📍 Gary Position: (${Math.round(agent.x)}, ${Math.round(agent.y)})`;
 }
 
 function draw() {
-    ctx.fillStyle = "#191925";
+    ctx.fillStyle = "#111827";
     ctx.fillRect(0, 0, 900, 600);
     
     // Grid
-    ctx.strokeStyle = "#222";
+    ctx.strokeStyle = "#1e293b";
     for(let i=0; i<900; i+=30) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,600); ctx.stroke(); }
     for(let i=0; i<600; i+=30) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(900,i); ctx.stroke(); }
 
-    // Obstacle
+    // Obstacle (package)
     ctx.fillStyle = "#e74c3c";
     ctx.fillRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
-    ctx.strokeStyle = "#ff6";
+    ctx.strokeStyle = "#f87171";
     ctx.lineWidth = 2;
     ctx.strokeRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
     
-    // Target
-    ctx.fillStyle = "#2ecc71";
+    // Target (package)
+    ctx.fillStyle = "#10b981";
     ctx.fillRect(target.x, target.y, target.w, target.h);
-    ctx.strokeStyle = "#6f6";
+    ctx.strokeStyle = "#34d399";
+    ctx.lineWidth = 2;
     ctx.strokeRect(target.x, target.y, target.w, target.h);
     
-    // Agent
-    ctx.fillStyle = "#3498db";
+    // Gary (blue circle + simple arm)
+    ctx.fillStyle = "#3b82f6";
     ctx.beginPath();
     ctx.arc(agent.x, agent.y, 35, 0, Math.PI*2);
     ctx.fill();
-    ctx.strokeStyle = "#6cf";
-    ctx.lineWidth = 3;
-    ctx.stroke();
     
+    // Simple arm
+    ctx.strokeStyle = "#f59e0b";
+    ctx.lineWidth = 12;
+    ctx.beginPath();
+    ctx.moveTo(agent.x + 20, agent.y);
+    ctx.lineTo(agent.x + 55, agent.y - 15);
+    ctx.stroke();
+
     requestAnimationFrame(draw);
 }
+
+// Keyboard support
+document.addEventListener("keydown", e => {
+    if (e.key === " ") {
+        e.preventDefault();
+        runGaryCycle();
+    }
+});
 
 draw();
 </script>
