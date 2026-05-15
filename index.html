@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PolyU MSc IRE - Embodied Robot Intelligence Demo</title>
+    <title>PolyU MSc IRE Week 1 - Embodied Agent 2D Game</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -77,15 +77,6 @@
             color: #555;
             font-size: 13px;
         }
-        .legend span {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
-        .dot-blue { background: #50b4ff; }
-        .dot-red { background: #dc3c3c; }
-        .dot-green { background: #32dc3c; }
     </style>
 </head>
 <body>
@@ -113,34 +104,13 @@
         <div class="task">🎯 任務: pick up the green cube / 夾取綠色方塊</div>
         <div class="instructions">按 SPACE 鍵執行一次 Perceive → Think → Action 循環</div>
     </div>
-    
-    <div class="legend">
-        <span><div class="dot dot-blue"></div> Agent 機械人</span>
-        <span><div class="dot dot-red"></div> Obstacle 障礙物</span>
-        <span><div class="dot dot-green"></div> Target 目標</span>
-    </div>
 
     <script>
         const canvas = document.getElementById('game');
         const ctx = canvas.getContext('2d');
         
-        // Game state
-        const agent = {
-            x: 150,
-            y: 250,
-            vx: 0,
-            vy: 0,
-            gripper: 'open'
-        };
-        
-        const obstacles = [
-            {x: 350, y: 180, w: 60, h: 60},
-            {x: 500, y: 320, w: 50, h: 50},
-            {x: 650, y: 150, w: 55, h: 55}
-        ];
-        
-        const target = {x: 780, y: 250, w: 40, h: 40};
-        
+        // Game state (random version)
+        const agent = { x: 150, y: 300 };
         const task = "pick up the green cube";
         
         // UI elements
@@ -148,130 +118,76 @@
         const thinkEl = document.getElementById('think');
         const actionEl = document.getElementById('action');
         
+        // Perceive function (RANDOM like user's Python code)
         function perceive() {
-            let vision = "clear";
-            let touch = "clear";
-            
-            // Check obstacles
-            for (let obs of obstacles) {
-                if (Math.abs(agent.x - obs.x - obs.w/2) < 70 && Math.abs(agent.y - obs.y - obs.h/2) < 70) {
-                    vision = "obstacle ahead";
-                }
-                if (Math.abs(agent.x - obs.x - obs.w/2) < 35 && Math.abs(agent.y - obs.y - obs.h/2) < 35) {
-                    touch = "obstacle";
-                    break;
-                }
-            }
-            
-            // Check target
-            if (Math.abs(agent.x - target.x - target.w/2) < 50 && Math.abs(agent.y - target.y - target.h/2) < 50) {
-                touch = "target detected";
-                vision = "target in range";
-            }
-            
-            return {vision, touch};
+            const vision = ["clear", "red cube", "obstacle ahead"][Math.floor(Math.random() * 3)];
+            const touch = ["clear", "obstacle", "object"][Math.floor(Math.random() * 3)];
+            return { vision, touch };
         }
         
+        // LLM Think function
         function llmThink(sensors, task) {
             if (sensors.touch === "obstacle") {
-                return {action: "move", reason: "避開障礙物", vx: -80, vy: 0};
-            } else if (sensors.vision === "obstacle ahead") {
-                return {action: "move", reason: "前方有障礙，轉向", vx: 0, vy: -60};
-            } else if (sensors.touch === "target detected") {
-                return {action: "close", reason: "夾取目標物品", vx: 0, vy: 0, gripper: "close"};
-            } else if (sensors.vision === "target in range") {
-                return {action: "approach", reason: "接近目標", vx: 70, vy: 0};
+                return {action: "move", dx: -90, dy: 0, reason: "避開障礙"};
+            } else if (sensors.touch === "object" && task.includes("pick")) {
+                return {action: "close", dx: 0, dy: 0, reason: "夾取目標", force: 60};
             } else {
-                return {action: "move", reason: "前進探索", vx: 80, vy: 0};
+                return {action: "move", dx: 110, dy: 0, reason: "前進"};
             }
         }
         
+        // Execute function
+        function execute(command) {
+            agent.x += command.dx;
+            agent.y += command.dy;
+            // Boundary
+            agent.x = Math.max(30, Math.min(canvas.width - 30, agent.x));
+            agent.y = Math.max(50, Math.min(canvas.height - 50, agent.y));
+            return command;
+        }
+        
+        // Draw function
         function draw() {
-            // Clear
             ctx.fillStyle = '#1a1c26';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Draw grid
+            // Grid
             ctx.strokeStyle = '#252836';
-            ctx.lineWidth = 1;
             for (let i = 0; i < canvas.width; i += 30) {
-                ctx.beginPath();
-                ctx.moveTo(i, 0);
-                ctx.lineTo(i, canvas.height);
-                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
             }
             for (let i = 0; i < canvas.height; i += 30) {
-                ctx.beginPath();
-                ctx.moveTo(0, i);
-                ctx.lineTo(canvas.width, i);
-                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
             }
             
-            // Draw obstacles (red)
-            for (let obs of obstacles) {
-                ctx.fillStyle = '#dc3c3c';
-                ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
-                ctx.strokeStyle = '#ff5555';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
-            }
-            
-            // Draw target (green)
-            ctx.fillStyle = '#32dc3c';
-            ctx.fillRect(target.x, target.y, target.w, target.h);
-            ctx.strokeStyle = '#55ff55';
+            // Obstacle (red)
+            ctx.fillStyle = '#dc3c3c';
+            ctx.fillRect(400, 220, 80, 80);
+            ctx.strokeStyle = '#ff5555';
             ctx.lineWidth = 2;
-            ctx.strokeRect(target.x, target.y, target.w, target.h);
+            ctx.strokeRect(400, 220, 80, 80);
             
-            // Draw agent (blue)
+            // Target (green)
+            ctx.fillStyle = '#32dc3c';
+            ctx.fillRect(650, 320, 60, 60);
+            ctx.strokeStyle = '#55ff55';
+            ctx.strokeRect(650, 320, 60, 60);
+            
+            // Agent (blue circle)
             ctx.beginPath();
-            ctx.arc(agent.x, agent.y, 25, 0, Math.PI * 2);
+            ctx.arc(agent.x, agent.y, 35, 0, Math.PI * 2);
             ctx.fillStyle = '#50b4ff';
             ctx.fill();
             ctx.strokeStyle = '#88ccff';
             ctx.lineWidth = 3;
             ctx.stroke();
-            
-            // Draw gripper
-            const gripperColor = agent.gripper === 'open' ? '#32dc3c' : '#ff5555';
-            ctx.beginPath();
-            ctx.arc(agent.x, agent.y + 35, 8, 0, Math.PI * 2);
-            ctx.fillStyle = gripperColor;
-            ctx.fill();
-            
-            // Draw sensor rays
-            ctx.strokeStyle = 'rgba(255,255,0,0.6)';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(agent.x, agent.y);
-            ctx.lineTo(agent.x + 50, agent.y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(agent.x, agent.y);
-            ctx.lineTo(agent.x, agent.y - 50);
-            ctx.stroke();
         }
         
         function update() {
-            agent.x += agent.vx;
-            agent.y += agent.vy;
-            
-            // Boundary
-            agent.x = Math.max(30, Math.min(canvas.width - 30, agent.x));
-            agent.y = Math.max(50, Math.min(canvas.height - 50, agent.y));
-            
-            // Friction
-            agent.vx *= 0.9;
-            agent.vy *= 0.9;
+            requestAnimationFrame(draw);
         }
         
-        function run() {
-            update();
-            draw();
-            requestAnimationFrame(run);
-        }
-        
-        // Input handler
+        // Input handler - SPACE key
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
                 e.preventDefault();
@@ -281,19 +197,17 @@
                 perceptionEl.innerHTML = `Vision: ${sensors.vision}<br>Touch: ${sensors.touch}`;
                 
                 // Think
-                const result = llmThink(sensors, task);
-                thinkEl.innerHTML = `LLM Think:<br>${result.reason}`;
+                const command = llmThink(sensors, task);
+                thinkEl.innerHTML = `LLM Think:<br>${command.reason}`;
                 
                 // Act
-                agent.vx = result.vx;
-                agent.vy = result.vy;
-                if (result.gripper) agent.gripper = result.gripper;
-                actionEl.innerHTML = `Action: ${result.action}<br>執行完畢`;
+                const result = execute(command);
+                actionEl.innerHTML = `Action: ${result.action}<br>${result.reason || ''}`;
             }
         });
         
-        // Start
-        run();
+        // Start game loop
+        update();
     </script>
 </body>
 </html>
