@@ -28,5 +28,4 @@
 - Pi 5 + 機械臂 → 後買
 
 ## 2026-05-15 Update
-- VTC 計劃已 reset
 - 全新 PolyU MSc Bootcamp 開始！
