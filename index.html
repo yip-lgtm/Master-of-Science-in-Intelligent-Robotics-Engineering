@@ -1,35 +1,35 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PolyU MSc IRE Week 1 - Gary Embodied Demo</title>
-    <style>
-        body { margin:0; background:#0f172a; color:#fff; font-family:"Microsoft YaHei",sans-serif; text-align:center; }
-        canvas { display:block; margin:10px auto; border:4px solid #4a90e2; border-radius:16px; background:#111827; max-width:100%; }
-        .info { position:absolute; top:15px; left:15px; right:15px; background:rgba(15,23,42,0.95); padding:12px; border-radius:12px; font-size:15px; line-height:1.5; }
-        button { padding:18px 30px; font-size:20px; margin:15px auto; background:#4a90e2; color:white; border:none; border-radius:12px; cursor:pointer; width:90%; max-width:420px; }
-        h1 { margin:15px 0 5px; font-size:1.35em; }
-        .gary { color:#f59e0b; font-weight:bold; }
-    </style>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+ <title>PolyU MSc IRE Week 1 - Gary Embodied Demo</title>
+ <style>
+ body { margin:0; background:#0f172a; color:#fff; font-family:"Microsoft YaHei",sans-serif; text-align:center; }
+ canvas { display:block; margin:10px auto; border:4px solid #4a90e2; border-radius:16px; background:#111827; max-width:100%; }
+ .info { position:absolute; top:15px; left:15px; right:15px; background:rgba(15,23,42,0.95); padding:12px; border-radius:12px; font-size:15px; line-height:1.5; }
+ button { padding:18px 30px; font-size:20px; margin:15px auto; background:#4a90e2; color:white; border:none; border-radius:12px; cursor:pointer; width:90%; max-width:420px; }
+ h1 { margin:15px 0 5px; font-size:1.35em; }
+ .gary { color:#f59e0b; font-weight:bold; }
+ </style>
 </head>
 <body>
-    <h1>PolyU MSc IRE Week 1</h1>
-    <h3 style="color:#4a90e2;">Embodied Robot Intelligence • Gary 倉庫機械人教學 Demo</h3>
-    <canvas id="game" width="900" height="600"></canvas>
+ <h1>PolyU MSc IRE Week 1</h1>
+ <h3 style="color:#4a90e2;">Embodied Robot Intelligence • Gary 倉庫機械人教學 Demo</h3>
+ <canvas id="game" width="900" height="600"></canvas>
 
-    <div class="info">
-        <div id="perception">👁️ Perception 感知: Waiting...</div>
-        <div id="think">🤖 LLM Think 思考: Waiting...</div>
-        <div id="action">⚡ Action 動作: Waiting...</div>
-        <div id="position" style="margin-top:8px; color:#f59e0b;">📍 Gary Position: (150, 300)</div>
-        <div style="margin-top:12px; font-size:13px; color:#94a3b8;">
-            真實案例：Figure 03 "Gary" 正在倉庫全自主分揀包裹
-        </div>
-    </div>
+ <div class="info">
+ <div id="perception">👁️ Perception 感知: Waiting...</div>
+ <div id="think">🤖 LLM Think 思考: Waiting...</div>
+ <div id="action">⚡ Action 動作: Waiting...</div>
+ <div id="position" style="margin-top:8px; color:#f59e0b;">📍 Gary Position: (150, 300)</div>
+ <div style="margin-top:12px; font-size:13px; color:#94a3b8;">
+ 真實案例：Figure 03 "Gary" 正在倉庫全自主分揀包裹
+ </div>
+ </div>
 
-    <button onclick="runGaryCycle()">🚀 模擬 Gary 一次完整工作循環</button>
-    <p style="color:#64748b; margin-top:8px;">按 SPACE 或點擊按鈕 → 觀察 Perception → Think → Action</p>
+ <button onclick="runGaryCycle()">🚀 模擬 Gary 一次完整工作循環</button>
+ <p style="color:#64748b; margin-top:8px;">按 SPACE 或點擊按鈕 → 觀察 Perception → Think → Action</p>
 
 <script>
 const canvas = document.getElementById("game");
@@ -39,94 +39,81 @@ let lastPerception = "Waiting...";
 let lastThink = "Waiting...";
 let lastAction = "Waiting...";
 
-const obstacle = { x: 400, y: 220, w: 80, h: 80 };
-const target = { x: 650, y: 320, w: 60, h: 60 };
+const obstacle = { x: 400, y: 220, w: 80, h: 80 }; // 紅色包裹障礙
+const target = { x: 650, y: 320, w: 60, h: 60 }; // 綠色目標包裹
 
 function perceive() {
-    const vision = ["clear", "red package ahead", "obstacle ahead"][Math.floor(Math.random()*3)];
-    const touch = ["clear", "obstacle", "package detected"][Math.floor(Math.random()*3)];
-    lastPerception = `Vision: ${vision} | Touch: ${touch}`;
-    return { vision, touch };
+ const vision = ["clear", "red package ahead", "obstacle ahead"][Math.floor(Math.random()*3)];
+ const touch = ["clear", "obstacle", "package detected"][Math.floor(Math.random()*3)];
+ lastPerception = `Vision: ${vision} | Touch: ${touch}`;
+ return { vision, touch };
 }
 
 function llmThink(sensors) {
-    if (sensors.touch === "obstacle") {
-        return { action: "move", dx: -85, dy: 0, reason: "避開障礙物（Gary 真實行為）" };
-    } else if (sensors.touch === "package detected") {
-        return { action: "close", force: 65, reason: "夾取包裹（Gary 分揀動作）" };
-    } else {
-        return { action: "move", dx: 105, dy: 0, reason: "前進至下一個包裹" };
-    }
+ if (sensors.touch === "obstacle") {
+ return { action: "move", dx: -85, dy: 0, reason: "避開障礙物（Gary 真實行為）" };
+ } else if (sensors.touch === "package detected") {
+ return { action: "close", force: 65, reason: "夾取包裹（Gary 分揀動作）" };
+ } else {
+ return { action: "move", dx: 105, dy: 0, reason: "前進至下一個包裹" };
+ }
 }
 
 function execute(cmd) {
-    if (cmd.action === "move") {
-        agent.x += cmd.dx;
-        agent.y += cmd.dy;
-        if (agent.x < 50) agent.x = 50;
-        if (agent.x > 850) agent.x = 850;
-    }
-    lastAction = `${cmd.action.toUpperCase()} | ${cmd.reason}`;
-}
-
-function runGaryCycle() {
-    const sensors = perceive();
-    const cmd = llmThink(sensors);
-    lastThink = `LLM Think: ${cmd.reason}`;
-    execute(cmd);
-    
-    document.getElementById("perception").innerText = `👁️ Perception 感知: ${lastPerception}`;
-    document.getElementById("think").innerText = `���� LLM Think 思考: ${lastThink}`;
-    document.getElementById("action").innerText = `⚡ Action 動作: ${lastAction}`;
-    document.getElementById("position").innerText = `📍 Gary Position: (${Math.round(agent.x)}, ${Math.round(agent.y)})`;
+ if (cmd.action === "move") {
+ agent.x += cmd.dx;
+ agent.y += cmd.dy;
+ if (agent.x < 50) agent.x = 50;
+ if (agent.x > 850) agent.x = 850;
+ }
+ lastAction = `${cmd.action.toUpperCase()} | ${cmd.reason}`;
 }
 
 function draw() {
-    ctx.fillStyle = "#111827";
-    ctx.fillRect(0, 0, 900, 600);
-    
-    // Grid
-    ctx.strokeStyle = "#1e293b";
-    for(let i=0; i<900; i+=30) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,600); ctx.stroke(); }
-    for(let i=0; i<600; i+=30) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(900,i); ctx.stroke(); }
+ ctx.fillStyle = "#111827";
+ ctx.fillRect(0, 0, 900, 600);
 
-    // Obstacle (package)
-    ctx.fillStyle = "#e74c3c";
-    ctx.fillRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
-    ctx.strokeStyle = "#f87171";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
-    
-    // Target (package)
-    ctx.fillStyle = "#10b981";
-    ctx.fillRect(target.x, target.y, target.w, target.h);
-    ctx.strokeStyle = "#34d399";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(target.x, target.y, target.w, target.h);
-    
-    // Gary (blue circle + simple arm)
-    ctx.fillStyle = "#3b82f6";
-    ctx.beginPath();
-    ctx.arc(agent.x, agent.y, 35, 0, Math.PI*2);
-    ctx.fill();
-    
-    // Simple arm
-    ctx.strokeStyle = "#f59e0b";
-    ctx.lineWidth = 12;
-    ctx.beginPath();
-    ctx.moveTo(agent.x + 20, agent.y);
-    ctx.lineTo(agent.x + 55, agent.y - 15);
-    ctx.stroke();
+ // 紅色障礙（包裹）
+ ctx.fillStyle = "#e74c3c";
+ ctx.fillRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
 
-    requestAnimationFrame(draw);
+ // 綠色目標包裹
+ ctx.fillStyle = "#10b981";
+ ctx.fillRect(target.x, target.y, target.w, target.h);
+
+ // Gary（藍色圓形 + 簡單機械臂）
+ ctx.fillStyle = "#3b82f6";
+ ctx.beginPath();
+ ctx.arc(agent.x, agent.y, 35, 0, Math.PI*2);
+ ctx.fill();
+ // 簡單機械臂
+ ctx.strokeStyle = "#f59e0b";
+ ctx.lineWidth = 12;
+ ctx.beginPath();
+ ctx.moveTo(agent.x + 20, agent.y);
+ ctx.lineTo(agent.x + 55, agent.y - 15);
+ ctx.stroke();
+
+ requestAnimationFrame(draw);
 }
 
-// Keyboard support
+function runGaryCycle() {
+ const sensors = perceive();
+ const cmd = llmThink(sensors);
+ lastThink = `LLM Think: ${cmd.reason}`;
+ execute(cmd);
+ 
+ document.getElementById("perception").innerText = `👁️ Perception 感知: ${lastPerception}`;
+ document.getElementById("think").innerText = `🤖 LLM Think 思考: ${lastThink}`;
+ document.getElementById("action").innerText = `⚡ Action 動作: ${lastAction}`;
+ document.getElementById("position").innerText = `📍 Gary Position: (${Math.round(agent.x)}, ${Math.round(agent.y)})`;
+}
+
 document.addEventListener("keydown", e => {
-    if (e.key === " ") {
-        e.preventDefault();
-        runGaryCycle();
-    }
+ if (e.key === " ") {
+ e.preventDefault();
+ runGaryCycle();
+ }
 });
 
 draw();
