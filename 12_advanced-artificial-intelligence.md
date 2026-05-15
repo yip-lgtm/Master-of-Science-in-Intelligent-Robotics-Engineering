@@ -1,16 +1,23 @@
 # 12 Advanced Artificial Intelligence
 
 ## 📅 Self-Study Roadmap
-- Week 1-3: Deep learning fundamentals (CNN/RNN/Transformer)
-- Week 4-6: PyTorch + TensorFlow practice
-- Week 7-12: Build AI agent
+- Week 1-4: PyTorch RL basics
+- Week 5-8: Stable-Baselines3 + Webots
+- Week 9-12: LLM + robot integration
 
 ## 🔗 Resources
-- Deep Learning Specialization (Coursera)
-- Fast.ai courses
-- PyTorch documentation
+- Hugging Face RL course
+- "Reinforcement Learning: An Introduction" (free)
+- LangChain + robotics examples
 
 ## 📝 Weekly Progress
 | Week | Date | Status | Notes |
 |------|------|--------|-------|
 | 1 | | ☐ | |
+| 2 | | ☐ | |
+| 3 | | ☐ | |
+
+## 💻 Exercises
+```python
+# AI/RL code
+```

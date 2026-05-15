@@ -1,16 +1,23 @@
 # 07 Computer Aided Product Analysis
 
 ## 📅 Self-Study Roadmap
-- Week 1-3: FEA basics + ANSYS tutorials
-- Week 4-6: Structural analysis practice
-- Week 7-12: Complete FEA project
+- Week 1-4: FreeCAD / SimScale FEA
+- Week 5-8: Stress analysis on robot parts
+- Week 9-12: Optimize soft gripper design
 
 ## 🔗 Resources
-- ANSYS Student Edition (free)
-- YouTube FEA tutorials
-- COMSOL basics
+- SimScale free community account
+- FreeCAD FEM workbench
+- Ansys Student + tutorials
 
 ## 📝 Weekly Progress
 | Week | Date | Status | Notes |
 |------|------|--------|-------|
 | 1 | | ☐ | |
+| 2 | | ☐ | |
+| 3 | | ☐ | |
+
+## 💻 Exercises
+```python
+# FEA code
+```

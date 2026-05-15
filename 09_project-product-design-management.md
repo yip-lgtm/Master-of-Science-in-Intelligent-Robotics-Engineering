@@ -1,16 +1,23 @@
 # 09 Project on Product Design and Management
 
 ## 📅 Self-Study Roadmap
-- Week 1-3: Design thinking + Agile methodology
-- Week 4-6: Project management tools (Jira/Trello)
-- Week 7-12: Complete design project
+- Week 1-4: Define project scope + Gantt
+- Week 5-8: Prototype + iteration
+- Week 9-12: Final report + presentation
 
 ## 🔗 Resources
-- Design Thinking methodology
-- Agile/Scrum guides
-- Notion project templates
+- Notion / Trello templates
+- "The Lean Startup" + robotics case studies
+- PolyU project guidelines
 
 ## 📝 Weekly Progress
 | Week | Date | Status | Notes |
 |------|------|--------|-------|
 | 1 | | ☐ | |
+| 2 | | ☐ | |
+| 3 | | ☐ | |
+
+## 💻 Exercises
+```python
+# Project management code
+```

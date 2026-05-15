@@ -1,16 +1,23 @@
 # 13 Industrial Human-Robot Systems and Automation
 
 ## 📅 Self-Study Roadmap
-- Week 1-3: Cobot safety standards + collaborative robotics
-- Week 4-6: UR/Denso robot programming
-- Week 7-12: Complete automation cell
+- Week 1-3: HRI principles + safety
+- Week 4-8: Webots human-robot collaboration
+- Week 9-12: Full industrial automation demo
 
-## 📗 Resources
-- ISO 10218 robot safety
-- Universal Robots academy
-- ROS industrial tutorials
+## 🔗 Resources
+- Universal Robots + Franka Emika docs
+- ROS-Industrial
+- "Human-Robot Interaction" papers
 
 ## 📝 Weekly Progress
 | Week | Date | Status | Notes |
 |------|------|--------|-------|
 | 1 | | ☐ | |
+| 2 | | ☐ | |
+| 3 | | ☐ | |
+
+## 💻 Exercises
+```python
+# HRI code
+```

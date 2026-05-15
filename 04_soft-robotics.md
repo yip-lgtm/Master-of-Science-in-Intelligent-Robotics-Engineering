@@ -1,16 +1,23 @@
 # 04 Soft Robotics
 
 ## 📅 Self-Study Roadmap
-- Week 1-3: Soft actuator materials
-- Week 4-6: Pneumatic/Mektronic design
-- Week 7-12: Soft gripper fabrication
+- Week 1-3: Soft gripper design in FreeCAD
+- Week 4-8: Webots soft body simulation
+- Week 9-12: Build + control soft robot (Pi 5 + silicone)
 
 ## 🔗 Resources
 - Soft Robotics Toolkit (Harvard)
-- COMSOL soft body simulation
-- YouTube soft robotics demos
+- "Soft Robotics" journal papers
+- YouTube "Soft Robotics" playlist
 
 ## 📝 Weekly Progress
 | Week | Date | Status | Notes |
 |------|------|--------|-------|
 | 1 | | ☐ | |
+| 2 | | ☐ | |
+| 3 | | ☐ | |
+
+## 💻 Exercises
+```python
+# Soft robotics code
+```

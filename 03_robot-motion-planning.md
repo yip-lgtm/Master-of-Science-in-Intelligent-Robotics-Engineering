@@ -1,16 +1,24 @@
 # 03 Robot Motion Planning
 
 ## 📅 Self-Study Roadmap
-- Week 1-3: A*, RRT, PRM algorithms
-- Week 4-6: Webots path planning
-- Week 7-12: Multi-robot coordination
+- Week 1-4: Python implement A* / RRT
+- Week 5-8: Webots + OMPL library
+- Week 9-12: Dynamic obstacle avoidance
 
 ## 🔗 Resources
-- roboticsMotionPlanning.org
-- OMPL library
-- YouTube path planning tutorials
+- Coursera "Robotic Motion Planning" (Penn)
+- MoveIt! + OMPL documentation
+- "Planning Algorithms" by LaValle (free PDF)
 
 ## 📝 Weekly Progress
 | Week | Date | Status | Notes |
 |------|------|--------|-------|
 | 1 | | ☐ | |
+| 2 | | ☐ | |
+| 3 | | ☐ | |
+| 4 | | ☐ | |
+
+## 💻 Exercises
+```python
+# Motion planning code
+```
