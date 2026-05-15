@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PolyU MSc IRE - Embodied Robot Intelligence Demo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #1a1c26;
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: #fff;
+        }
+        h1 {
+            margin: 20px 0 10px;
+            font-size: 28px;
+            color: #fff;
+        }
+        .subtitle {
+            color: #888;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        canvas {
+            border: 3px solid #334;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+        .panel {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+            width: 900px;
+            justify-content: space-between;
+        }
+        .info-box {
+            background: #252836;
+            padding: 15px 20px;
+            border-radius: 8px;
+            width: 280px;
+        }
+        .info-box h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #334;
+        }
+        .perception { color: #ff6; }
+        .think { color: #6cf; }
+        .action { color: #6f6; }
+        .task-box {
+            background: #252836;
+            padding: 15px 20px;
+            border-radius: 8px;
+            width: 900px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .task {
+            font-size: 18px;
+            color: #ccc;
+        }
+        .instructions {
+            color: #666;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 15px 0;
+            color: #555;
+            font-size: 13px;
+        }
+        .legend span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+        .dot-blue { background: #50b4ff; }
+        .dot-red { background: #dc3c3c; }
+        .dot-green { background: #32dc3c; }
+    </style>
+</head>
+<body>
+    <h1>PolyU MSc IRE - Embodied Robot Intelligence Demo</h1>
+    <div class="subtitle">Week 1 | Embodied Robot Intelligence</div>
+    
+    <canvas id="game" width="900" height="500"></canvas>
+    
+    <div class="panel">
+        <div class="info-box">
+            <h3>🔍 Perception 感知</h3>
+            <div id="perception" class="perception">Waiting...<br>等待按 SPACE</div>
+        </div>
+        <div class="info-box">
+            <h3>🧠 LLM Think 思考</h3>
+            <div id="think" class="think">Waiting...<br>等待按 SPACE</div>
+        </div>
+        <div class="info-box">
+            <h3>⚡ Action 動作</h3>
+            <div id="action" class="action">Waiting...<br>等待按 SPACE</div>
+        </div>
+    </div>
+    
+    <div class="task-box">
+        <div class="task">🎯 任務: pick up the green cube / 夾取綠色方塊</div>
+        <div class="instructions">按 SPACE 鍵執行一次 Perceive → Think → Action 循環</div>
+    </div>
+    
+    <div class="legend">
+        <span><div class="dot dot-blue"></div> Agent 機械人</span>
+        <span><div class="dot dot-red"></div> Obstacle 障礙物</span>
+        <span><div class="dot dot-green"></div> Target 目標</span>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        
+        // Game state
+        const agent = {
+            x: 150,
+            y: 250,
+            vx: 0,
+            vy: 0,
+            gripper: 'open'
+        };
+        
+        const obstacles = [
+            {x: 350, y: 180, w: 60, h: 60},
+            {x: 500, y: 320, w: 50, h: 50},
+            {x: 650, y: 150, w: 55, h: 55}
+        ];
+        
+        const target = {x: 780, y: 250, w: 40, h: 40};
+        
+        const task = "pick up the green cube";
+        
+        // UI elements
+        const perceptionEl = document.getElementById('perception');
+        const thinkEl = document.getElementById('think');
+        const actionEl = document.getElementById('action');
+        
+        function perceive() {
+            let vision = "clear";
+            let touch = "clear";
+            
+            // Check obstacles
+            for (let obs of obstacles) {
+                if (Math.abs(agent.x - obs.x - obs.w/2) < 70 && Math.abs(agent.y - obs.y - obs.h/2) < 70) {
+                    vision = "obstacle ahead";
+                }
+                if (Math.abs(agent.x - obs.x - obs.w/2) < 35 && Math.abs(agent.y - obs.y - obs.h/2) < 35) {
+                    touch = "obstacle";
+                    break;
+                }
+            }
+            
+            // Check target
+            if (Math.abs(agent.x - target.x - target.w/2) < 50 && Math.abs(agent.y - target.y - target.h/2) < 50) {
+                touch = "target detected";
+                vision = "target in range";
+            }
+            
+            return {vision, touch};
+        }
+        
+        function llmThink(sensors, task) {
+            if (sensors.touch === "obstacle") {
+                return {action: "move", reason: "避開障礙物", vx: -80, vy: 0};
+            } else if (sensors.vision === "obstacle ahead") {
+                return {action: "move", reason: "前方有障礙，轉向", vx: 0, vy: -60};
+            } else if (sensors.touch === "target detected") {
+                return {action: "close", reason: "夾取目標物品", vx: 0, vy: 0, gripper: "close"};
+            } else if (sensors.vision === "target in range") {
+                return {action: "approach", reason: "接近目標", vx: 70, vy: 0};
+            } else {
+                return {action: "move", reason: "前進探索", vx: 80, vy: 0};
+            }
+        }
+        
+        function draw() {
+            // Clear
+            ctx.fillStyle = '#1a1c26';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid
+            ctx.strokeStyle = '#252836';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 30) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 30) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+            
+            // Draw obstacles (red)
+            for (let obs of obstacles) {
+                ctx.fillStyle = '#dc3c3c';
+                ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+                ctx.strokeStyle = '#ff5555';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
+            }
+            
+            // Draw target (green)
+            ctx.fillStyle = '#32dc3c';
+            ctx.fillRect(target.x, target.y, target.w, target.h);
+            ctx.strokeStyle = '#55ff55';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(target.x, target.y, target.w, target.h);
+            
+            // Draw agent (blue)
+            ctx.beginPath();
+            ctx.arc(agent.x, agent.y, 25, 0, Math.PI * 2);
+            ctx.fillStyle = '#50b4ff';
+            ctx.fill();
+            ctx.strokeStyle = '#88ccff';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // Draw gripper
+            const gripperColor = agent.gripper === 'open' ? '#32dc3c' : '#ff5555';
+            ctx.beginPath();
+            ctx.arc(agent.x, agent.y + 35, 8, 0, Math.PI * 2);
+            ctx.fillStyle = gripperColor;
+            ctx.fill();
+            
+            // Draw sensor rays
+            ctx.strokeStyle = 'rgba(255,255,0,0.6)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(agent.x, agent.y);
+            ctx.lineTo(agent.x + 50, agent.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(agent.x, agent.y);
+            ctx.lineTo(agent.x, agent.y - 50);
+            ctx.stroke();
+        }
+        
+        function update() {
+            agent.x += agent.vx;
+            agent.y += agent.vy;
+            
+            // Boundary
+            agent.x = Math.max(30, Math.min(canvas.width - 30, agent.x));
+            agent.y = Math.max(50, Math.min(canvas.height - 50, agent.y));
+            
+            // Friction
+            agent.vx *= 0.9;
+            agent.vy *= 0.9;
+        }
+        
+        function run() {
+            update();
+            draw();
+            requestAnimationFrame(run);
+        }
+        
+        // Input handler
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                
+                // Perceive
+                const sensors = perceive();
+                perceptionEl.innerHTML = `Vision: ${sensors.vision}<br>Touch: ${sensors.touch}`;
+                
+                // Think
+                const result = llmThink(sensors, task);
+                thinkEl.innerHTML = `LLM Think:<br>${result.reason}`;
+                
+                // Act
+                agent.vx = result.vx;
+                agent.vy = result.vy;
+                if (result.gripper) agent.gripper = result.gripper;
+                actionEl.innerHTML = `Action: ${result.action}<br>執行完畢`;
+            }
+        });
+        
+        // Start
+        run();
+    </script>
+</body>
+</html>
