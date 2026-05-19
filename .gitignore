@@ -1,19 +1,19 @@
-# Dependencies / Large files
-*.pdf
-*.xlsx
-*.docx
+# .gitignore
 
 # OS
 .DS_Store
 Thumbs.db
 
+# Backup files
+*.bak
+*. backup
+*~
+
+# PDFs (keep only in references/)
+*.pdf
+
+# Excel backups
+~$*.xlsx
+
 # OpenClaw
 .openclaw/
-
-# Build outputs
-*.pyc
-__pycache__/
-
-# Temp
-*.tmp
-*.log

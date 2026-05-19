@@ -1,32 +1,58 @@
-# PolyU MSc Intelligent Robotics Engineering 12-Week Self-Study Bootcamp
+# MW01 RSE Bootcamp
+## Registered Structural Engineer Minor Works Self-Study Program
 
-## 課程背景
-- **目標**：PolyU MSc Intelligent Robotics Engineering 自學
-- **團隊**：Saba, Lucas, Benjamin, 湯生
-- **週期**：12 週（每週 4-6 小時）
+**12-Week Self-Study Bootcamp for MW (Minor Works) Reports**
 
-## 12-Week Timeline
+---
 
-| 週次 | 重點科目（Core + Elective） | OpenClaw Skill |
-|------|------------------------|--------------|
-| Week 1-2 | Embodied Robot Intelligence + Advanced Artificial Intelligence | polyu_ire_cron |
-| Week 3-4 | Principles of Robotic Mechanisms + Advanced Product Mechatronics | polyu_ire_cron |
-| Week 5-6 | Robot Motion Planning + Autonomous Vehicles | polyu_ire_cron |
-| Week 7-8 | Soft Robotics + Advanced Materials and Structural Design | polyu_ire_cron |
-| Week 9-10 | Advanced Control Technology + Computer Vision and Image Processing | polyu_ire_cron |
-| Week 11-12 | Industrial Human-Robot Systems and Automation + Computer Aided Product Analysis + Project | polyu_ire_cron |
+## Overview
 
-## 最終目標
-12 週後 GitHub meb-bootcamp repo 有晒 PolyU MSc 級 project：
-- Embodied AI Agent
-- Motion Planning
-- Soft Gripper
-- Vision System
+This bootcamp covers all 13 MW items from MWTGe.pdf for RSE (Registered Structural Engineer) professional practice.
 
-## 硬件（暫時未齊）
-- Webots + Python + OpenClaw → 先做
-- Pi 5 + 機械臂 → 後買
+**Target:** Pass MW report generation with RSE-level quality
 
-## 2026-05-15 Update
-- VTC 計劃已 reset
-- 全新 PolyU MSc Bootcamp 開始！
+---
+
+## Progress
+
+| Week | MW Item | Status |
+|------|--------|--------|
+| Week 1 | MW 1.6 Protective Barrier | ✅ Complete |
+| Week 2 | MW 1.1 Internal Staircase | ✅ Complete |
+| Week 3 | MW 1.5 Cantilever Support | ✅ Complete |
+| Week 4 | MW 1.50 Supporting Structure | ✅ Complete |
+| Week 5 | MW 1.27 Canopy | ⏳ Next |
+| ... | ... | ⏳ |
+
+---
+
+## Structure
+
+```
+MW01-RSE-Bootcamp/
+├── templates/       # Report templates
+├── references/     # Official documents (MWTGe.pdf, CoP, etc.)
+├── projects/       # Each MW project folder
+├── excel/         # Load calculation spreadsheets
+├── certificates/  # Completion certificates
+└── progress/     # Learning progress
+```
+
+---
+
+## Commands
+
+- `random` - Generate random MW report
+- `/MW` - Get MW status
+
+---
+
+## Contact
+
+- OpenClaw Agent: Yip
+- Team: Saba, Lucas, 湯生
+
+---
+
+**Start:** 2026-05-15  
+**Goal:** Complete all 13 MW items + RSE certification ready
