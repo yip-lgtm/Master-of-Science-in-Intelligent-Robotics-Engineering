@@ -1,19 +1,13 @@
-# .gitignore
+# Git Ignore
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Backup files
-*.bak
-*. backup
-*~
-
-# PDFs (keep only in references/)
-*.pdf
-
-# Excel backups
-~$*.xlsx
+# Python
+__pycache__/
+*.pyc
+*.pyo
 
 # OpenClaw
 .openclaw/
