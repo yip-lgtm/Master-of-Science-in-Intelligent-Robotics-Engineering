@@ -1,0 +1,180 @@
+"""
+Warehouse Robot v2 — Agent Loop + Sensor Fusion Demo
+Shows Perception → Sensor Fusion → Decision → Action in real-time
+"""
+import os
+os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')
+
+import math
+import sys
+import pygame
+
+pygame.init()
+WIDTH, HEIGHT = 1200, 800
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Warehouse Robot v2 — Sensor Fusion + Agent Loop")
+clock = pygame.time.Clock()
+
+
+def draw_frame(arm, arm_controller, agent, packages, drop_zone, frame_count):
+    screen.fill((20, 25, 35))
+    font = pygame.font.SysFont("Consolas", 16)
+    title_font = pygame.font.SysFont("Consolas", 22)
+
+    # Shelves
+    pygame.draw.rect(screen, (80, 80, 90), (380, 200, 400, 20))
+    pygame.draw.rect(screen, (80, 80, 90), (380, 300, 400, 20))
+
+    # Drop Zone
+    pygame.draw.rect(screen, (100, 200, 255), drop_zone, 4)
+    screen.blit(font.render("DROP ZONE", True, (100, 200, 255)),
+                (drop_zone.x + 10, drop_zone.y - 25))
+
+    # Packages
+    for pkg in packages:
+        if not pkg['grabbed']:
+            pygame.draw.rect(screen, pkg['color'],
+                             (pkg['pos'][0], pkg['pos'][1], 45, 45))
+            screen.blit(font.render(pkg['id'], True, (0, 0, 0)),
+                        (pkg['pos'][0] + 15, pkg['pos'][1] + 12))
+
+    # Arm
+    j1, j2, j3 = arm_controller.get_joint_positions()
+    end_x, end_y = arm_controller.get_end_effector_position()
+    pygame.draw.line(screen, (100, 200, 255), (650, 420), j1, 10)
+    pygame.draw.line(screen, (255, 190, 90), j1, j2, 8)
+    pygame.draw.line(screen, (120, 255, 140), j2, j3, 6)
+    pygame.draw.circle(screen, (255, 80, 80), (int(j1[0]), int(j1[1])), 8)
+    pygame.draw.circle(screen, (255, 200, 80), (int(j2[0]), int(j2[1])), 7)
+    pygame.draw.circle(screen, (100, 255, 160), (int(j3[0]), int(j3[1])), 9)
+    ee_color = (255, 50, 50) if arm_controller.has_package else (220, 220, 220)
+    pygame.draw.circle(screen, ee_color, (int(end_x), int(end_y)), 10)
+
+    # HUD - Status
+    state = arm_controller.get_state()
+    status = (f"State: {agent.state} | Held: {'Yes' if state['has_package'] else 'No'} | "
+              f"End: ({state['end_x']:.0f}, {state['end_y']:.0f}) | Frame: {frame_count}")
+    screen.blit(font.render(status, True, (220, 220, 220)), (30, 25))
+
+    stats = (f"Delivered: {agent.packages_delivered} | Cycles: {agent.cycle_count} | "
+             f"Remaining: {sum(1 for p in packages if not p['grabbed'])}")
+    screen.blit(font.render(stats, True, (180, 180, 180)), (30, 50))
+
+    # Sensor Panel (RIGHT side)
+    panel_x = 820
+    panel_y = 100
+    pygame.draw.rect(screen, (40, 50, 60), (panel_x - 10, panel_y - 30, 350, 580), 2)
+    screen.blit(title_font.render("🔬 Sensor Fusion Panel", True, (255, 220, 100)),
+                (panel_x, panel_y - 30))
+
+    if agent.sensor_log:
+        latest = agent.sensor_log[-1]
+        y = panel_y + 10
+        screen.blit(font.render("═══ RAW SENSORS ═══", True, (255, 180, 100)), (panel_x, y))
+        y += 25
+
+        enc = latest["encoders"]
+        screen.blit(font.render(f"Encoder θ1:  {enc[0]:+7.3f} rad", True, (200, 200, 200)), (panel_x, y))
+        y += 20
+        screen.blit(font.render(f"Encoder θ2:  {enc[1]:+7.3f} rad", True, (200, 200, 200)), (panel_x, y))
+        y += 20
+        screen.blit(font.render(f"Encoder θ3:  {enc[2]:+7.3f} rad", True, (200, 200, 200)), (panel_x, y))
+        y += 25
+
+        gyro = latest["gyro"]
+        screen.blit(font.render(f"Gyro ω1:    {gyro[0]:+7.2f} rad/s (drifts)", True, (255, 150, 150)), (panel_x, y))
+        y += 20
+        screen.blit(font.render(f"Gyro ω2:    {gyro[1]:+7.2f} rad/s", True, (255, 150, 150)), (panel_x, y))
+        y += 25
+
+        accel = latest["accel"]
+        screen.blit(font.render(f"Accel x:    {accel[0]:+7.1f} m/s² (noisy)", True, (150, 255, 150)), (panel_x, y))
+        y += 20
+        screen.blit(font.render(f"Accel y:    {accel[1]:+7.1f} m/s²", True, (150, 255, 150)), (panel_x, y))
+        y += 25
+
+        force = latest["force"]
+        force_color = (255, 100, 100) if force > 0.5 else (150, 150, 150)
+        screen.blit(font.render(f"Force:      {force:+.3f} N", True, force_color), (panel_x, y))
+        y += 30
+
+        screen.blit(font.render("═══ FUSION OUTPUT ═══", True, (100, 220, 255)), (panel_x, y))
+        y += 25
+        sensors = agent.sensors
+        screen.blit(font.render(f"Fused angle: {sensors.fused_angle:+7.3f} rad", True, (100, 220, 255)), (panel_x, y))
+        y += 20
+        screen.blit(font.render(f"Filter: α=0.98 gyro + 0.02 accel", True, (180, 180, 180)), (panel_x, y))
+        y += 30
+
+        if agent.fusion_log:
+            screen.blit(font.render("═══ DECISION LOG ═══", True, (255, 220, 100)), (panel_x, y))
+            y += 25
+            for entry in agent.fusion_log[-6:]:
+                line = f"[{entry['phase']}] F={entry['force']:.2f}"
+                screen.blit(font.render(line, True, (200, 200, 200)), (panel_x, y))
+                y += 20
+
+    # Action log (LEFT side)
+    if agent.action_log:
+        log_y = 90
+        screen.blit(font.render("═══ ACTIONS ═══", True, (180, 255, 180)), (30, log_y))
+        log_y += 22
+        for msg in agent.action_log[-6:]:
+            screen.blit(font.render(msg, True, (220, 220, 220)), (30, log_y))
+            log_y += 20
+
+    # Title
+    title = title_font.render(
+        "Warehouse Robot v2 — Sensor Fusion + Agent Loop",
+        True, (255, 255, 255),
+    )
+    screen.blit(title, (WIDTH // 2 - title.get_width() // 2, HEIGHT - 50))
+
+    help_text = "Real-time sensor reading + complementary filter fusion"
+    screen.blit(font.render(help_text, True, (140, 140, 140)),
+                (WIDTH // 2 - help_text.__len__() * 4, HEIGHT - 25))
+
+    return screen
+
+
+def main():
+    from arm_controller import ArmController
+    from warehouse_robot import Arm
+    from sensor_fusion import WarehouseAgent
+
+    arm = Arm()
+    arm_controller = ArmController(arm, base_pos=(650, 420))
+    packages = [
+        {"pos": (450, 300), "color": (50, 220, 50), "id": "A", "grabbed": False},
+        {"pos": (550, 280), "color": (50, 220, 50), "id": "B", "grabbed": False},
+        {"pos": (650, 320), "color": (50, 220, 50), "id": "C", "grabbed": False},
+    ]
+    drop_zone = pygame.Rect(420, 550, 120, 80)
+    agent = WarehouseAgent(arm_controller, packages, drop_zone)
+
+    frame_count = 0
+    running = True
+    while running and frame_count < 5000:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+        agent.step()
+        frame = draw_frame(arm, arm_controller, agent, packages, drop_zone, frame_count)
+        pygame.display.flip()
+        clock.tick(60)
+        frame_count += 1
+
+    print(f"\n=== Final Stats ===")
+    print(f"Frames: {frame_count}")
+    print(f"Packages delivered: {agent.packages_delivered}")
+    print(f"Cycles: {agent.cycle_count}")
+    print(f"Sensor readings: {len(agent.sensor_log)}")
+    print(f"Fusion log entries: {len(agent.fusion_log)}")
+    return agent, arm_controller, packages, drop_zone, arm
+
+
+if __name__ == "__main__":
+    main()
