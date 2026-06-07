@@ -68,65 +68,121 @@ if r > max_reach:
 
 ### 1. 感測器融合 (Sensor Fusion)
 
-**核心目的:** 多感測器數據融合後, 比單一感測器更準確、更可靠.
+**核心目的:** 單一感測器有噪音、誤差、局限性. 融合多種感測器數據, 得到更準確、更魯棒的狀態估計.
 
-**常見方法:**
+**5 種常見方法對比:**
 
-| Method | 用途 | 優點 | 缺點 |
-|--------|------|------|------|
-| **Kalman Filter** | 位置、速度估計 | 最優線性估計 | 計算量大, 假設 Gaussian noise |
-| **Complementary Filter** | IMU (gyro + accel) | 簡單、實時 | 唔係最優 |
-| **Multi-Sensor Fusion** | Camera + Encoder + Force | 最高精度 | 標定複雜 |
+| 方法 | 優點 | 缺點 | 適合場景 |
+|-----------------------|-----------------------------------|--------------------------|------------------------------|
+| **Complementary Filter** | 簡單、計算量低 | 精度一般 | IMU + 視覺 / 低成本系統 |
+| **Kalman Filter (KF)** | 最佳線性估計, 數學嚴謹 | 假設線性、高斯噪音 | 位置/速度估計 |
+| **Extended KF (EKF)** | 可處理非線性 | 計算量較大 | 真實機器人導航 |
+| **Particle Filter** | 可處理非高斯、非線性 | 計算量大 | 複雜環境定位 |
+| **Multi-sensor Fusion** | 結合視覺 + 力覺 + 編碼器 | 需校準與同步 | 機械臂精準抓取 |
 
-**Complementary Filter 例子:**
+**互補濾波器範例 (直接加落 ArmController):**
 ```python
-def fuse_sensors(gyro_angle, accel_angle, alpha=0.98):
-    """High-pass gyro + low-pass accel"""
+def sensor_fusion(gyro_angle, accel_angle, alpha=0.98):
+    """互補濾波器: high-pass gyro + low-pass accel"""
     return alpha * gyro_angle + (1 - alpha) * accel_angle
+
+# 使用例子
+fused = sensor_fusion(gyro_reading, accel_reading)
 ```
 
-**Gary 倉庫機械人案例:**
-- 📷 Vision (條碼定位) — 慢但絕對位置
-- 🔄 Joint Encoders — 快但 drift
-- 💪 Force Sensor — 抓取反饋
+**Demo 應用:**
+- 📷 Vision (Camera) — 偵測包裹位置與 ID
+- 🔄 Joint Encoders — 回饋關節角度
+- 💪 Force/Torque Sensor (模擬) — 偵測是否抓緊
+- 融合後: 更準確判斷「末端是否已經到達包裹位置 + 是否成功抓取」
 
-三個融合 → 抓取穩定性高
+**Gary 案例:** Vision (條碼) + Encoders + Force Sensor 融合, 確保抓取穩定
 
 ### 2. 致動器選擇 (Actuator Selection)
 
-| 致動器類型 | 優點 | 缺點 | 適合應用 |
-|------------------|--------------------------|--------------------|------------------------------|
-| **DC Motor + Gear** | 扭力大、控制簡單 | 體積大 | 工業機械臂 |
-| **Servo Motor** | 精準位置控制 | 扭力較小 | 小型機械臂、Gripper |
-| **Stepper Motor** | 精準步進、無需反饋 | 效率低、發熱 | 3D Printer、精密定位 |
-| **Pneumatic / Soft Actuator** | 柔軟、安全 | 控制複雜 | Soft Robotics |
+**選擇考慮:** 扭力、速度、精度、體積、成本、安全性、控制難度
 
-**選擇原則:**
-- 🎯 需要高精度位置 → **Servo**
-- 💪 需要大扭力 + 速度 → **DC Motor + Encoder**
-- 🤝 需要安全人機互動 → **Soft Actuator**
-- 🖨️ 需要開環精準步進 → **Stepper**
+| 致動器類型 | 扭力 | 速度 | 精度 | 優點 | 缺點 | 適合 IRE 場景 |
+|-------------------------|----------|----------|----------|-------------------------------|--------------------------|------------------------------|
+| **DC Motor + Gearbox** | 高 | 中 | 中 | 成本低、扭力大 | 需要編碼器反饋 | 工業機械臂 |
+| **Servo Motor** | 中 | 中 | 高 | 內建位置控制、易用 | 扭力有限、連續旋轉難 | 小型抓手、精準定位 |
+| **Stepper Motor** | 中 | 低 | 高 | 開環控制精準 | 低速扭力低、發熱 | 3D Printer、精密平台 |
+| **Brushless DC (BLDC)** | 高 | 高 | 高 | 效率高、壽命長 | 控制複雜 | 高性能機械臂 |
+| **Pneumatic / Hydraulic** | 極高 | 高 | 低 | 力大、速度快 | 需壓縮機/油壓、噪音 | 重載工業應用 |
+| **Soft Actuator** | 低-中 | 中 | 中 | 安全、柔順 | 控制難、壽命較短 | Soft Robotics (Week 3) |
+
+**選擇決策流程:**
+1. 先決定負載與速度需求
+2. 再看精度要求 (是否需要閉環)
+3. 最後考慮安全與成本 (人機協作 → Servo / Soft)
+
+**Demo 應用:**
+- 目前 Pygame 模擬關節 → 可模擬 Servo (位置控制) 或 DC Motor + Encoder (速度 + 位置雙閉環)
+- 加力反饋 → 可模擬 力控 Servo 或 Series Elastic Actuator (SEA)
 
 ### 3. 系統整合 (System Integration)
 
-**4 層架構:**
+**核心 4 層架構 (推薦 Simulator 採用):**
+
 ```
-┌─────────────────────────┐
-│  感知層 (Sensors)         │ ← Camera, Encoder, IMU, Force
-├─────────────────────────┤
-│  決策層 (Agent)           │ ← Rule-based / LLM / RL
-├─────────────────────────┤
-│  執行層 (Actuators)       │ ← Motor, Servo, Pneumatic
-├─────────────────────────┤
-│  反饋閉環 (Feedback)      │ ← Sensor → Agent → Actuator
-└─────────────────────────┘
+感知層 (Sensors)         ← Camera, Encoder, IMU, Force
+    ↓
+決策層 (Agent/Controller) ← Rule-based, LLM, RL
+    ↓
+執行層 (Actuators)        ← Motor, Servo, Pneumatic
+    ↓
+反饋閉環 → 回到感知層
 ```
 
-**Demo 對應:**
-- 感知 → 末端位置 (FK) + 包裹狀態 (Game state)
-- 決策 → `ArmController.move_to()` + `Agent` state machine
-- 執行 → 關節角度 + 平滑移動 (interpolation)
-- 反饋 → Re-perceive 每 frame
+**關鍵整合要素:**
+
+| 要素 | 內容 | Demo 對應 |
+|------|------|-----------|
+| **通訊協議** | CAN, EtherCAT, ROS2, Modbus | pygame event loop (簡化) |
+| **即時性** | 控制迴路 1kHz~10kHz | 60 Hz `dt = 1/60` |
+| **安全** | 急停、碰撞偵測、力限制 | force sensor + safety check |
+| **診斷** | 狀態監控、錯誤處理 | `action_log` + `sensor_log` |
+
+**MechatronicsSystem 範例 (整合架構):**
+```python
+class MechatronicsSystem:
+    def __init__(self):
+        self.arm_controller = ArmController(arm)
+        self.agent = WarehouseAgent(self.arm_controller)
+        self.sensors = {"vision": VisionSensor(), "force": ForceSensor()}
+
+    def run_loop(self):
+        perception = self.sensors["vision"].get_data()  # 感知
+        decision = self.agent.think(perception)          # 決策
+        self.arm_controller.execute(decision)            # 執行
+        self.arm_controller.update()                     # 更新狀態
+```
+
+**常見挑戰與解決:**
+- 感測器不同步 → 使用時間戳 + 緩衝區
+- 致動器延遲 → 預測控制 (Model Predictive Control)
+- 系統不穩定 → 先做單迴路測試, 再逐步整合
+
+### 4. Closed-Loop Servo 模擬 (v2.1)
+
+**Demo 採用 PID 位置閉環 + 速度/加速度限制 (似真實 Servo):**
+
+```python
+# PID 控制律
+torque = Kp * error + Ki * integral + Kd * derivative
+torque = clip(torque, -max_accel, max_accel)        # 限制扭矩
+velocity = torque * dt
+velocity = clip(velocity, -max_speed*dt, max_speed*dt)  # 限制速度
+joint_angle += velocity
+```
+
+**參數:**
+- `max_speed = 2.0 rad/s` (~115°/s)
+- `max_accel = 8.0 rad/s²`
+- `Kp = 8.0, Ki = 0.5, Kd = 0.3` (PID gains)
+- `dt = 1/60` (control loop period)
+
+**Telemetry:** 記錄 `torque_log` + `speed_log` 供監控診斷
 
 ---
 
