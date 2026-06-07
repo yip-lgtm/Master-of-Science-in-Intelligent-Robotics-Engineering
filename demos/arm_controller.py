@@ -11,6 +11,7 @@ Mechatronics features:
 """
 
 import math
+import pygame
 
 
 class PIDController:
@@ -67,6 +68,7 @@ class ArmController:
         self.grab_radius = 35  # Distance threshold for grab
         self.current_package = None
         self.packages = []  # Set externally via set_packages()
+        self.frame_count = 0  # Internal frame counter for grab flash
 
         # Servo parameters (closed-loop simulation)
         self.max_speed = max_speed      # rad/s
@@ -88,6 +90,8 @@ class ArmController:
         self.torque_log = [[], [], []]
         self.speed_log = [[], [], []]
         self.angle_error_log = [[], [], []]
+        # Grab success tracking (for visualization flash)
+        self.last_grab_frame = -1000  # Long ago, so no flash on start
 
     def set_packages(self, packages):
         """Inject package list for auto-grab distance check"""
@@ -157,6 +161,7 @@ class ArmController:
         Applies speed and acceleration limits.
         Then auto-checks for grab/release conditions.
         """
+        self.frame_count += 1
         targets = [self.target_theta1, self.target_theta2, self.target_theta3]
         currents = [self.arm.theta1, self.arm.theta2, self.arm.theta3]
         pids = [self.pid1, self.pid2, self.pid3]
@@ -218,8 +223,27 @@ class ArmController:
                 pkg['grabbed'] = True
                 self.has_package = True
                 self.current_package = pkg
+                # Track grab success for visualization (using internal frame counter)
+                self.last_grab_frame = self.frame_count
                 return True
         return False
+
+    def get_pid_force_estimate(self):
+        """
+        Estimate contact force from PID output.
+        Real robots have force/torque sensors, but PID integral term
+        approximates the steady-state error force needed to maintain position.
+        """
+        if not self.torque_log[0]:
+            return 0.0
+        # Sum of absolute torques across joints (rough proxy for force)
+        total_torque = (
+            abs(self.torque_log[0][-1]) +
+            abs(self.torque_log[1][-1]) +
+            abs(self.torque_log[2][-1])
+        )
+        # Convert torque to force (rough: 0.3 N per N·m)
+        return total_torque * 0.3
 
     def release(self):
         """Release any held package"""

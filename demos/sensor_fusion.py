@@ -84,10 +84,20 @@ class SensorModule:
             accel[1] + random.gauss(0, self.noise * 10),
         )
 
-    def read_force(self, has_package):
-        """Force sensor: 0 when idle, ~1.5 N when grasping"""
+    def read_force(self, has_package, pid_estimate=0.0):
+        """
+        Force sensor: 0 when idle, ~1.5 N when grasping.
+        Now uses PID-based force estimate + real sensor noise fusion.
+        Real production robots use actual F/T sensors at the wrist.
+        """
         if has_package:
-            return 1.5 + random.gauss(0, 0.05)
+            # Combine real sensor (1.5N nominal) + PID estimate
+            # This simulates the 'sensor fusion' between physical sensor
+            # and model-based estimate (digital twin)
+            real_sensor = 1.5 + random.gauss(0, 0.05)
+            # Weighted fusion: 70% real sensor, 30% PID estimate
+            fused = 0.7 * real_sensor + 0.3 * pid_estimate
+            return fused
         return 0.0
 
     def complementary_filter(self, gyro_angle, accel_angle, alpha=0.98):
@@ -97,13 +107,13 @@ class SensorModule:
         """
         return alpha * gyro_angle + (1 - alpha) * accel_angle
 
-    def update(self, has_package=False):
+    def update(self, has_package=False, pid_estimate=0.0):
         """Run one sensor cycle, return fused state."""
         self.time += self.dt
         encoders = self.read_encoders()
         gyro = self.read_gyro()
         accel = self.read_accel()
-        force = self.read_force(has_package)
+        force = self.read_force(has_package, pid_estimate)
 
         # Derive angle from accelerometer (atan2 of gravity vector)
         # For a planar arm, "gravity" is just the y-acceleration
@@ -151,15 +161,19 @@ class WarehouseAgent:
     def perceive(self):
         """
         PERCEPTION: Read all sensors, fuse data, return state estimate.
+        Now uses PID-based force estimate + real sensor fusion.
         Returns (end_x, end_y, packages, has_package) — fused estimate.
         """
-        sensor_data = self.sensors.update(self.arm.has_package)
+        # Get PID-based force estimate from arm controller
+        pid_force = self.arm.get_pid_force_estimate()
+        sensor_data = self.sensors.update(self.arm.has_package, pid_force)
         # Log sensor readings (for debugging / visualization)
         self.sensor_log.append({
             "encoders": sensor_data["encoders"],
             "gyro": sensor_data["gyro"],
             "accel": sensor_data["accel"],
             "force": sensor_data["force"],
+            "pid_estimate": pid_force,
         })
         # For end effector position, use direct kinematics (in production,
         # this would also be fused with vision)

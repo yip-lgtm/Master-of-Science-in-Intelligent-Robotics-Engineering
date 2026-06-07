@@ -38,17 +38,57 @@ def draw_frame(arm, arm_controller, agent, packages, drop_zone, frame_count):
             screen.blit(font.render(pkg['id'], True, (0, 0, 0)),
                         (pkg['pos'][0] + 15, pkg['pos'][1] + 12))
 
-    # Arm
+    # Arm (color may change based on force threshold)
     j1, j2, j3 = arm_controller.get_joint_positions()
     end_x, end_y = arm_controller.get_end_effector_position()
-    pygame.draw.line(screen, (100, 200, 255), (650, 420), j1, 10)
-    pygame.draw.line(screen, (255, 190, 90), j1, j2, 8)
-    pygame.draw.line(screen, (120, 255, 140), j2, j3, 6)
+    # Determine arm color based on grip force (visual warning)
+    arm_color_1 = (100, 200, 255)  # base
+    arm_color_2 = (255, 190, 90)
+    arm_color_3 = (120, 255, 140)
+    if arm_controller.has_package and agent.sensor_log:
+        latest_force = agent.sensor_log[-1]["force"]
+        # Thresholds: 1.8N warning, 2.5N danger
+        if latest_force > 2.5:
+            arm_color_1 = (255, 60, 60)  # Red - danger
+            arm_color_2 = (255, 60, 60)
+            arm_color_3 = (255, 60, 60)
+        elif latest_force > 1.8:
+            arm_color_1 = (255, 200, 80)  # Yellow - warning
+            arm_color_2 = (255, 200, 80)
+            arm_color_3 = (255, 200, 80)
+    pygame.draw.line(screen, arm_color_1, (650, 420), j1, 10)
+    pygame.draw.line(screen, arm_color_2, j1, j2, 8)
+    pygame.draw.line(screen, arm_color_3, j2, j3, 6)
     pygame.draw.circle(screen, (255, 80, 80), (int(j1[0]), int(j1[1])), 8)
     pygame.draw.circle(screen, (255, 200, 80), (int(j2[0]), int(j2[1])), 7)
     pygame.draw.circle(screen, (100, 255, 160), (int(j3[0]), int(j3[1])), 9)
     ee_color = (255, 50, 50) if arm_controller.has_package else (220, 220, 220)
     pygame.draw.circle(screen, ee_color, (int(end_x), int(end_y)), 10)
+
+    # Grab success green flash (1 second highlight)
+    if hasattr(arm_controller, 'last_grab_frame'):
+        frames_since_grab = arm_controller.frame_count - arm_controller.last_grab_frame
+        if 0 <= frames_since_grab < 30:  # 30 frames = 0.5s
+            flash_alpha = 200 - frames_since_grab * 6
+            # Draw green circle around end effector
+            flash_radius = 25 + frames_since_grab // 2
+            flash_surf = pygame.Surface((flash_radius * 2, flash_radius * 2),
+                                        pygame.SRCALPHA)
+            pygame.draw.circle(flash_surf, (100, 255, 100, max(0, flash_alpha)),
+                              (flash_radius, flash_radius), flash_radius, 4)
+            screen.blit(flash_surf, (int(end_x) - flash_radius, int(end_y) - flash_radius))
+            # "✓ GRABBED!" text
+            if frames_since_grab < 15:
+                success_font = pygame.font.SysFont("Consolas", 20, bold=True)
+                success_text = success_font.render("✓ GRABBED!",
+                                                  True, (100, 255, 100))
+                text_bg = pygame.Surface(
+                    (success_text.get_width() + 12, success_text.get_height() + 6)
+                )
+                text_bg.fill((20, 25, 35))
+                text_bg.set_alpha(220)
+                screen.blit(text_bg, (int(end_x) - 50, int(end_y) - 50))
+                screen.blit(success_text, (int(end_x) - 45, int(end_y) - 47))
 
     # Proximity-based approach arrow (when not holding, points to nearest package)
     if not arm_controller.has_package:
