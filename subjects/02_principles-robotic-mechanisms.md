@@ -184,6 +184,95 @@ joint_angle += velocity
 
 **Telemetry:** 記錄 `torque_log` + `speed_log` 供監控診斷
 
+### 4.1 PIDController Class (v2.2)
+
+Refactored PID into reusable class:
+
+```python
+class PIDController:
+    def __init__(self, kp=1.5, ki=0.1, kd=0.3, max_output=10.0, max_integral=1.0):
+        self.kp, self.ki, self.kd = kp, ki, kd
+        self.max_output = max_output
+        self.max_integral = max_integral
+        self.integral = 0.0
+        self.prev_error = 0.0
+
+    def compute(self, target, current, dt=0.016):
+        error = target - current
+        self.integral += error * dt
+        self.integral = clip(self.integral, -max_integral, max_integral)  # anti-windup
+        derivative = (error - self.prev_error) / dt
+        self.prev_error = error
+        return clip(self.kp*error + self.ki*self.integral + self.kd*derivative, 
+                    -max_output, max_output)
+
+    def reset(self):
+        self.integral = 0.0
+        self.prev_error = 0.0
+```
+
+**Per-joint PID** (不同關節唔同 load → 不同 gains):
+- `pid1` (shoulder): Kp=2.0, Ki=0.05, Kd=0.4
+- `pid2` (elbow): Kp=2.0, Ki=0.05, Kd=0.4
+- `pid3` (wrist): Kp=2.5, Ki=0.08, Kd=0.5
+
+### 4.2 Force-Feedback Grab (v2.2)
+
+`grab()` 改用 distance check:
+
+```python
+def grab(self):
+    if self.has_package:
+        return False
+    end_x, end_y = self.get_end_effector_position()
+    for pkg in self.packages:
+        if pkg.get('grabbed', False):
+            continue
+        px, py = pkg['pos'][0] + 22, pkg['pos'][1] + 22
+        distance = math.hypot(end_x - px, end_y - py)
+        if distance < self.grab_radius:  # 35px threshold
+            pkg['grabbed'] = True
+            self.has_package = True
+            self.current_package = pkg
+            return True
+    return False
+```
+
+### 4.3 MechatronicsSystem Integration (v2.2)
+
+Top-level orchestrator combining all components:
+
+```python
+class MechatronicsSystem:
+    def __init__(self, arm_controller, agent, drop_zone):
+        self.arm = arm_controller
+        self.agent = agent
+        self.drop_zone = drop_zone
+
+    def run_step(self):
+        # 1. Perceive
+        perception = self.agent.perceive()
+        # 2. Think
+        self.agent.think(perception)
+        # 3. Act (PID control)
+        self.arm.update()
+        # 4. Auto grab/release check
+        state = self.arm.get_state()
+        if not state['is_moving']:
+            if not state['has_package'] and self.agent.state == "MOVING_TO_PKG":
+                self.arm.grab()  # force-feedback trigger
+            elif state['has_package'] and self.agent.state == "MOVING_TO_DROP":
+                if self.drop_zone.collidepoint(state['end_x'], state['end_y']):
+                    self.arm.release()
+```
+
+**Usage:**
+```python
+sys = MechatronicsSystem(arm_controller, warehouse_agent, drop_zone)
+for frame in range(N):
+    sys.run_step()  # 1 call = 1 full Perception-Action cycle
+```
+
 ---
 
 ## 2C. Agent Loop 完整實現 (Perception → Think → Action)
