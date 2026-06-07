@@ -104,4 +104,38 @@ for target in target_states:
     pygame.image.save(frame, repo_path)
     print(f'📸 {target}')
 
+# Capture proximity arrow snapshot (not holding, near a package)
+print('\n--- Proximity arrow snapshot ---')
+agent3 = WarehouseAgent(arm_controller, packages, drop_zone)
+arm_controller2 = ArmController(arm, base_pos=(650, 420))
+arm_controller2.set_packages(packages)
+# Move to a position close to but not at a package
+# Package B is at (550+22, 280+22) = (572, 302), put end at (650, 350) so it's nearby
+arm_controller2.set_target(650, 350)
+for _ in range(200):  # More frames to actually reach
+    arm_controller2.update()
+# Populate sensor log
+for _ in range(10):
+    agent3.perceive()
+filename = '/tmp/agent_v3_snapshots/proximity_arrow.png'
+frame = draw_frame(arm, arm_controller2, agent3, packages, drop_zone, 0)
+pygame.image.save(frame, filename)
+repo_path = '/app/data-intelligence-architect/ire-bootcamp/demos/snapshots_v3/proximity_arrow.png'
+pygame.image.save(frame, repo_path)
+state = arm_controller2.get_state()
+print(f'📸 Proximity arrow (not holding, near pkg)')
+print(f'   Held: {state["has_package"]}, End: ({state["end_x"]:.0f},{state["end_y"]:.0f})')
+# Calculate distance to nearest package
+import math as m
+nearest_dist = float('inf')
+nearest_pkg = None
+for pkg in packages:
+    if not pkg.get('grabbed', False):
+        d = m.hypot(state['end_x'] - (pkg['pos'][0]+22), state['end_y'] - (pkg['pos'][1]+22))
+        if d < nearest_dist:
+            nearest_dist = d
+            nearest_pkg = pkg
+if nearest_pkg:
+    print(f'   Nearest: {nearest_pkg["id"]} at {nearest_dist:.0f}px')
+
 print(f'\nDone!')

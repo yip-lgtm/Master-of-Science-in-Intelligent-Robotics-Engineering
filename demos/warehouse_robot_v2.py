@@ -50,6 +50,73 @@ def draw_frame(arm, arm_controller, agent, packages, drop_zone, frame_count):
     ee_color = (255, 50, 50) if arm_controller.has_package else (220, 220, 220)
     pygame.draw.circle(screen, ee_color, (int(end_x), int(end_y)), 10)
 
+    # Proximity-based approach arrow (when not holding, points to nearest package)
+    if not arm_controller.has_package:
+        nearest_pkg = None
+        nearest_dist = float('inf')
+        for pkg in packages:
+            if not pkg.get('grabbed', False):
+                px, py = pkg['pos'][0] + 22, pkg['pos'][1] + 22
+                d = math.hypot(end_x - px, end_y - py)
+                if d < nearest_dist:
+                    nearest_dist = d
+                    nearest_pkg = pkg
+        if nearest_pkg and nearest_dist < 120:
+            # Draw arrow pointing toward nearest package
+            px, py = nearest_pkg['pos'][0] + 22, nearest_pkg['pos'][1] + 22
+            dx = px - end_x
+            dy = py - end_y
+            # Normalize
+            d = math.hypot(dx, dy) + 1e-6
+            ux, uy = dx / d, dy / d
+            # Color by proximity: red (close), orange (medium)
+            if nearest_dist < 35:
+                prox_color = (255, 100, 100)  # Red - in grab range
+                prox_status = "READY"
+            elif nearest_dist < 70:
+                prox_color = (255, 200, 100)  # Orange - close
+                prox_status = "NEAR"
+            else:
+                prox_color = (180, 180, 255)  # Light blue - far
+                prox_status = "FAR"
+            # Arrow length
+            arrow_len = max(25, min(80, 80 - nearest_dist / 2))
+            arrow_end_x = int(end_x + ux * arrow_len)
+            arrow_end_y = int(end_y + uy * arrow_len)
+            # Draw dashed line (proximity, not physical force)
+            dash_length = 8
+            for i in range(0, int(arrow_len), dash_length * 2):
+                start = (int(end_x + ux * i), int(end_y + uy * i))
+                end = (int(end_x + ux * (i + dash_length)),
+                       int(end_y + uy * (i + dash_length)))
+                pygame.draw.line(screen, prox_color, start, end, 3)
+            # Arrow head
+            import math as m
+            angle = m.atan2(uy, ux)
+            head_len = 10
+            pygame.draw.polygon(screen, prox_color, [
+                (arrow_end_x, arrow_end_y),
+                (int(arrow_end_x - head_len * m.cos(angle - 0.4)),
+                 int(arrow_end_y - head_len * m.sin(angle - 0.4))),
+                (int(arrow_end_x - head_len * m.cos(angle + 0.4)),
+                 int(arrow_end_y - head_len * m.sin(angle + 0.4))),
+            ])
+            # Label
+            force_font = pygame.font.SysFont("Consolas", 13, bold=True)
+            force_text = force_font.render(
+                f"→{nearest_pkg['id']} d={nearest_dist:.0f} {prox_status}",
+                True, prox_color
+            )
+            text_bg = pygame.Surface(
+                (force_text.get_width() + 6, force_text.get_height() + 2)
+            )
+            text_bg.fill((20, 25, 35))
+            text_bg.set_alpha(220)
+            label_x = int(end_x + ux * (arrow_len + 12))
+            label_y = int(end_y + uy * (arrow_len + 12)) - 8
+            screen.blit(text_bg, (label_x, label_y))
+            screen.blit(force_text, (label_x + 3, label_y + 1))
+
     # Force feedback arrow (only show when holding package)
     if arm_controller.has_package and agent.sensor_log:
         latest = agent.sensor_log[-1]
