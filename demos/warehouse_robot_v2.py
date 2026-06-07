@@ -50,6 +50,73 @@ def draw_frame(arm, arm_controller, agent, packages, drop_zone, frame_count):
     ee_color = (255, 50, 50) if arm_controller.has_package else (220, 220, 220)
     pygame.draw.circle(screen, ee_color, (int(end_x), int(end_y)), 10)
 
+    # Force feedback arrow (only show when holding package)
+    if arm_controller.has_package and agent.sensor_log:
+        latest = agent.sensor_log[-1]
+        force = latest["force"]
+        # Color code: green (firm grip), yellow (loose), red (slipping)
+        if force > 1.2:
+            arrow_color = (100, 255, 100)  # Green - firm
+            grip_status = "FIRM"
+        elif force > 0.7:
+            arrow_color = (255, 220, 80)  # Yellow - loose
+            grip_status = "LOOSE"
+        else:
+            arrow_color = (255, 80, 80)  # Red - slipping
+            grip_status = "SLIP!"
+        # Arrow length proportional to force
+        arrow_len = max(20, min(80, force * 40))
+        # Draw arrow pointing down (gripper direction)
+        arrow_end_x = int(end_x)
+        arrow_end_y = int(end_y + arrow_len)
+        pygame.draw.line(
+            screen, arrow_color,
+            (int(end_x), int(end_y) + 12),
+            (arrow_end_x, arrow_end_y),
+            4,
+        )
+        # Arrow head
+        pygame.draw.polygon(screen, arrow_color, [
+            (arrow_end_x, arrow_end_y + 8),
+            (arrow_end_x - 6, arrow_end_y - 2),
+            (arrow_end_x + 6, arrow_end_y - 2),
+        ])
+        # Force label
+        force_font = pygame.font.SysFont("Consolas", 14, bold=True)
+        force_text = force_font.render(f"F={force:.2f}N {grip_status}", True, arrow_color)
+        # Background for legibility
+        text_bg = pygame.Surface((force_text.get_width() + 6, force_text.get_height() + 2))
+        text_bg.fill((20, 25, 35))
+        text_bg.set_alpha(220)
+        screen.blit(text_bg, (int(end_x) + 12, int(end_y) + arrow_len - 18))
+        screen.blit(force_text, (int(end_x) + 15, int(end_y) + arrow_len - 17))
+
+    # Grip stability indicator (top-right corner)
+    if arm_controller.has_package and agent.sensor_log:
+        latest = agent.sensor_log[-1]
+        force = latest["force"]
+        # Background bar
+        bar_x, bar_y = 30, HEIGHT - 130
+        bar_w, bar_h = 250, 20
+        pygame.draw.rect(screen, (40, 50, 60), (bar_x, bar_y, bar_w, bar_h), 1)
+        # Fill based on force
+        fill_pct = min(1.0, force / 2.0)
+        fill_w = int(bar_w * fill_pct)
+        if force > 1.2:
+            bar_color = (100, 255, 100)
+        elif force > 0.7:
+            bar_color = (255, 220, 80)
+        else:
+            bar_color = (255, 80, 80)
+        pygame.draw.rect(screen, bar_color, (bar_x, bar_y, fill_w, bar_h))
+        # Label
+        bar_font = pygame.font.SysFont("Consolas", 13)
+        bar_label = bar_font.render(
+            f"Grip Force: {force:.2f}N (target 1.0-1.8N)",
+            True, (220, 220, 220)
+        )
+        screen.blit(bar_label, (bar_x, bar_y - 18))
+
     # HUD - Status
     state = arm_controller.get_state()
     status = (f"State: {agent.state} | Held: {'Yes' if state['has_package'] else 'No'} | "
