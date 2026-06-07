@@ -153,13 +153,14 @@ def main():
     arm = Arm()
     arm_controller = ArmController(arm, base_pos=(650, 420))
 
-    # 3 packages on shelf
+    # 3 packages on shelf (all within arm reach from base 650,420)
     packages = [
-        {"pos": (400, 300), "color": (50, 220, 50), "id": "A", "grabbed": False},
-        {"pos": (520, 280), "color": (50, 220, 50), "id": "B", "grabbed": False},
+        {"pos": (450, 300), "color": (50, 220, 50), "id": "A", "grabbed": False},
+        {"pos": (550, 280), "color": (50, 220, 50), "id": "B", "grabbed": False},
         {"pos": (650, 320), "color": (50, 220, 50), "id": "C", "grabbed": False},
     ]
-    drop_zone = pygame.Rect(150, 550, 120, 80)
+    # Drop zone placed within arm's max reach (390px from base)
+    drop_zone = pygame.Rect(420, 550, 120, 80)
     agent = Agent(arm_controller, packages, drop_zone)
 
     auto_mode = False  # Toggle with SPACE
