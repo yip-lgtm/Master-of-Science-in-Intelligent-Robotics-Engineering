@@ -1,34 +1,46 @@
 # [Course Code] [Course Title]
 
-**Course Type**: Major Required / Major Elective / Foundation / Research Component
-**Units**: 3 (or as listed)
-**Stream** (if applicable): Design and Manufacturing / Robotics and Automation / Mechatronics / Energy / Bio-Medical / Materials / Software / Business / Others
+**Course Type**: Major Required / Major Elective / Foundation / etc.  
+**Units**: 3 (or as applicable)  
+**Stream** (if applicable): Design and Manufacturing / Robotics and Automation / Mechatronics / Others
 
 ## Official Description
-[Official description from CUHK MAE curriculum]
+[Paste the full official description here from CUHK website or handbook]
 
 ## Key Topics
+- Topic 1
+- Topic 2
+- Topic 3
 - ...
 
 ## Learning Outcomes
-- ...
+- Understand ...
+- Apply ...
+- Design / Analyze ...
 
 ## Self-Study Notes & Resources
-- **Textbooks / References**:
-- **Key Concepts**:
+- **Recommended Textbook / References**:
+- **Key Concepts & Formulas**:
+- **Important Theorems / Methods**:
 - **Relation to Robotics / Mechatronics / My Projects**:
-  - Directly supports [e.g. 3R arm kinematics, PID control, state machine, force feedback, warehouse robot, FYP]
+  - Directly supports [specific project, e.g. 3R arm kinematics, PID control, state machine, force feedback]
 
 ## Practical Application in My Simulator / Projects
-- [Describe application in your own projects]
+- [Describe how you used or plan to use the knowledge, e.g. "Implemented basic kinematics in Pygame 3R arm", "Used in warehouse robot state machine transitions"]
 
 ## Practice & Exercises
-- ...
+- [List problems or projects you did]
 
 ## Status
 - [ ] Theory notes completed
-- [ ] Code / Simulator linked
-- [ ] Reflection written
+- [ ] Key examples worked out
+- [ ] Linked to code / simulator
+- [ ] Reflection / summary written
 - [ ] Connected to PolyU MSc IRE courses
 
 **Last Updated**: 2026-06-08
+```
+
+Now, for the lists, I will create a master list file.
+
+Since there are many, I will create one file with all categorized lists.

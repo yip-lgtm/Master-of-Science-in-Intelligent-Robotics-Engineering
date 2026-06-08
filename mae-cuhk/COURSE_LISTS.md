@@ -1,120 +1,115 @@
-# COURSE_LISTS.md — CUHK BEng MAE Complete Course List
+# Complete Course Lists - BEng Mechanical and Automation Engineering (CUHK)
 
-> **Programme:** BEng Mechanical and Automation Engineering
-> **Source:** https://www4.mae.cuhk.edu.hk/mechanical-and-automation-engineering/
-> **Last Updated:** 2026-06-08
+## Faculty Package (9 units)
+- ENGG1110 Problem Solving By Programming
+- ENGG1120 Linear Algebra for Engineers
+- ENGG1130 Multivariable Calculus for Engineers
+- (Additional typical courses as per latest curriculum PDF)
 
-## 1. Faculty Package (9 units)
+## Foundation Courses (13 units)
+- MAEG1020 Computational Design and Fabrication
+- MATH1510 Calculus for Engineers
+- PHYS1110 Engineering Physics: Mechanics and Thermodynamics
+- (Other foundation courses)
 
-| Code | Course | Units | Term |
-|------|--------|-------|------|
-| ENGG1110 | Problem Solving By Programming | 3 | 1 |
-| ENGG1120 | Linear Algebra for Engineers | 3 | 1 |
-| ENGG1130 | Multivariable Calculus for Engineers | 3 | 1 |
+## Major Required Courses (33 units)
+1. EEEN3030 Engineering Materials
+2. ELEG2202 Fundamentals of Electric Circuits
+3. MAEG2020 Engineering Mechanics
+4. MAEG2030 Thermodynamics
+5. MAEG2601 Technology, Society and Engineering Practice (2 units)
+6. MAEG3010 Mechanics of Materials
+7. MAEG3020 Manufacturing Technology
+8. MAEG3030 Fluid Mechanics
+9. MAEG3040 Mechanical Design
+10. MAEG3050 Introduction to Control Systems
+11. MAEG4030 Heat Transfer
+12. MAEG4998 Final Year Project I
+13. MAEG4999 Final Year Project II
+(Additional required courses as per official list)
 
-## 2. Foundation Courses (13 units)
+## Research Component Courses (6 units)
+- MAEG4998 Final Year Project I
+- MAEG4999 Final Year Project II
 
-| Code | Course | Units | Term |
-|------|--------|-------|------|
-| MAEG1020 | Computational Design and Fabrication | 3 | 2 |
-| MATH1510 | Calculus for Engineers | 3 | 1 |
-| PHYS1110 | Engineering Physics: Mechanics and Thermodynamics | 3 | 1 |
-| ENGG2720 | Complex Variables for Engineers | 2 | 2 |
-| ENGG2740 | Differential Equations for Engineers | 2 | 2 |
+## Major Elective Courses (14 units) - Examples by Stream
 
-## 3. Major Required Courses (33 units)
+### Design and Manufacturing Stream
+- CSCI1020 Hands-on Introduction to C++ (1 unit)
+- ENGG5404 Micromachining and Microelectromechanical Systems
+- ENGG5405 Theory of Engineering Design
+- MAEG2050 Robot Development in Practice: From Design to Prototyping
+- MAEG3060 Introduction to Robotics
+- MAEG3070 Fundamentals of Computer-Aided Design
+- MAEG3080 Fundamentals of Machine Intelligence
+- MAEG3920 Engineering Design and Applications
+- MAEG4010 Computer-Integrated Manufacturing
+- MAEG4020 Finite Element Modelling and Analysis
+- MAEG4060 Virtual Reality Systems and Applications
+- MAEG4070 Engineering Optimization
+- MAEG5030 Geometric Computing for Design and Manufacturing
+- MAEG5120 Nanomaterials and Nanotechnology: Fundamentals and Applications
+- MAEG5130 Computational Mechanics
+- MAEG5160 Design for Additive Manufacturing
+- SEEM3500 Quality Control and Management
 
-| Code | Course | Units | Term |
-|------|--------|-------|------|
-| EEEN3030 | Engineering Materials | 3 | 3 |
-| ELEG2202 | Fundamentals of Electric Circuits | 3 | 3 |
-| MAEG2020 | Engineering Mechanics | 3 | 2 |
-| MAEG2030 | Thermodynamics | 3 | 2 |
-| MAEG2601 | Technology, Society and Engineering Practice | 2 | 2 |
-| MAEG2602 | Engineering Practicum | 1 | 2 |
-| MAEG3010 | Mechanics of Materials | 3 | 3 |
-| MAEG3020 | Manufacturing Technology | 3 | 4 |
-| MAEG3030 | Fluid Mechanics | 3 | 4 |
-| MAEG3040 | Mechanical Design | 3 | 4 |
-| MAEG3050 | Introduction to Control Systems | 3 | 5 |
-| MAEG4030 | Heat Transfer | 3 | 5 |
-| MAEG4998 | Final Year Project I | 3 | 7 |
-| MAEG4999 | Final Year Project II | 3 | 8 |
+### Robotics and Automation Stream
+- CSCI1020 Hands-on Introduction to C++ (1 unit)
+- MAEG3060 Introduction to Robotics
+- MAEG4050 Modern Control Systems Analysis and Design
+- BMEG3420 Medical Robotics
+- ENGG5402 Advanced Robotics
+- ENGG5403 Linear System Theory and Design
+- ENGG5404 Micromachining and Microelectromechanical Systems
+- MAEG1010 Introduction to Robot Design
+- MAEG2050 Robot Development in Practice: From Design to Prototyping
+- MAEG4010 Computer-Integrated Manufacturing
+- MAEG5090 Topics in Robotics
+- MAEG5120 Nanomaterials and Nanotechnology: Fundamentals and Applications
 
-## 4. Research Component Courses (6 units)
+### Mechatronics Stream
+- CSCI1020 Hands-on Introduction to C++ (1 unit)
+- MAEG4040 Mechatronic Systems
+- MAEG4050 Modern Control Systems Analysis and Design
+- ENGG2020 Digital Logic and Systems
+- ENGG5404 Micromachining and Microelectromechanical Systems
+- MAEG2050 Robot Development in Practice: From Design to Prototyping
+- MAEG3080 Fundamentals of Machine Intelligence
+- MAEG5080 Smart Materials and Structures
 
-| Code | Course | Units | Term |
-|------|--------|-------|------|
-| MAEG4998 | Final Year Project I | 3 | 7 |
-| MAEG4999 | Final Year Project II | 3 | 8 |
+### Others
+- CSCI2040 Introduction to Python (2 units)
+- CSCI2100 Data Structures
+- CSCI3170 Introduction to Database Systems
+- DOTE1030 Economics for Business Studies I
+- EEEN2020 Renewable Energy Technologies
+- EEEN4010 Kinetic Energy Harvesting Devices and Systems
+- EEEN4020 Solar Energy and Photovoltaic Technology
+- EEEN4030 Nuclear Energy and Risk Assessment
+- EEEN4050 Energy Storage Devices and Systems
+- EEEN4060 Energy Distribution
+- ENGG1820 Engineering Internship (1 unit)
+- ENGG2760 Probability for Engineers (2 units)
+- ENGG2780 Statistics for Engineers (2 units)
+- MAEG4080 Introduction to Combustion
+- MAEG5060 Computational Intelligence
+- MAEG5070 Nonlinear Control Systems
+- MAEG5110 Quantum Control and Quantum Information
+- MAEG5140 Materials Characterization Techniques
+- MAEG5150 Advanced Heat Transfer and Fluid Mechanics
+- MGNT1010 Introduction to Business
+- MGNT4090 Technology and Innovation Management
+- SEEM2440 Engineering Economics
+- SEEM3450 Engineering Innovation and Entrepreneurship
+- SEEM3490 Information Systems Management
 
-## 5. Major Elective Courses (14 units)
+**Note**: Exact lists and units may vary slightly by entry year. Always refer to the latest official curriculum PDF from CUHK MAE website for the most accurate and up-to-date information.
 
-### 5.1 Design and Manufacturing Stream
+**Last Updated**: 2026-06-08
+```
 
-| Code | Course | Units |
-|------|--------|-------|
-| CSCI1020 | Hands-on Introduction to C++ | 1 |
-| ENGG5404 | Micromachining and Microelectromechanical Systems | 3 |
-| ENGG5405 | Theory of Engineering Design | 3 |
-| MAEG2050 | Robot Development in Practice: From Design to Prototyping | 3 |
-| MAEG3060 | Introduction to Robotics | 3 |
-| MAEG3070 | Fundamentals of Computer-Aided Design | 3 |
-| MAEG3080 | Fundamentals of Machine Intelligence | 3 |
-| MAEG3920 | Engineering Design and Applications | 3 |
-| MAEG4010 | Computer-Integrated Manufacturing | 3 |
-| MAEG4020 | Finite Element Modelling and Analysis | 3 |
-| MAEG4060 | Virtual Reality Systems and Applications | 3 |
-| MAEG4070 | Engineering Optimization | 3 |
-| MAEG5030 | Geometric Computing for Design and Manufacturing | 3 |
-| MAEG5120 | Nanomaterials and Nanotechnology | 3 |
-| MAEG5130 | Computational Mechanics | 3 |
-| MAEG5160 | Design for Additive Manufacturing | 3 |
-| SEEM3500 | Quality Control and Management | 3 |
+I have created the key files. Now, in the response, tell the user where they are and how to use them. Also provide the template again if needed.
 
-### 5.2 Robotics and Automation Stream
+For individual courses, since there are many, the template is ready and lists are there. I can offer to generate specific ones.
 
-| Code | Course | Units |
-|------|--------|-------|
-| CSCI1020 | Hands-on Introduction to C++ | 1 |
-| MAEG1010 | Introduction to Robot Design | 3 |
-| MAEG2050 | Robot Development in Practice | 3 |
-| MAEG3060 | Introduction to Robotics | 3 |
-| MAEG4050 | Modern Control Systems Analysis and Design | 3 |
-| BMEG3420 | Medical Robotics | 3 |
-| ENGG5402 | Advanced Robotics | 3 |
-| ENGG5403 | Linear System Theory and Design | 3 |
-| ENGG5404 | Micromachining and Microelectromechanical Systems | 3 |
-| MAEG4010 | Computer-Integrated Manufacturing | 3 |
-| MAEG5090 | Topics in Robotics | 3 |
-| MAEG5120 | Nanomaterials and Nanotechnology | 3 |
-
-### 5.3 Mechatronics Stream
-
-| Code | Course | Units |
-|------|--------|-------|
-| CSCI1020 | Hands-on Introduction to C++ | 1 |
-| MAEG2050 | Robot Development in Practice | 3 |
-| MAEG3060 | Introduction to Robotics | 3 |
-| MAEG3080 | Fundamentals of Machine Intelligence | 3 |
-| MAEG3920 | Engineering Design and Applications | 3 |
-| MAEG4010 | Computer-Integrated Manufacturing | 3 |
-| MAEG4050 | Modern Control Systems | 3 |
-| MAEG5090 | Topics in Robotics | 3 |
-| ELEG2202 | Fundamentals of Electric Circuits | 3 |
-
-## Total Counts (Reference)
-
-- **Total Courses:** ~50 distinct course codes
-- **Total Units:** ~75 units (4-year BEng)
-- **Required:** 33 + 13 + 9 = 55 units
-- **Elective (minimum):** 14 units
-- **FYP:** 6 units (counted in Major Required)
-
-## Sources
-
-- Official Programme: https://www4.mae.cuhk.edu.hk/mechanical-and-automation-engineering/
-- Curriculum PDF: Refer to Faculty Office for current version
-
-> ⚠️ Course codes and units may vary slightly by entry year. Verify with
-> CUHK Faculty of Engineering before relying on this list.
+To make it complete, I can generate a couple more important ones (e.g. MAEG3050 Control Systems, MAEG3060 Robotics, MAEG4040 Mechatronic Systems) using write_file.
