@@ -16,4 +16,7 @@ Self-Study 12-Week Bootcamp
 ## 📅 每週計劃
 - [week-plans/](./week-plans/)
 
+## 🎓 Other Programmes (Reference)
+- [mae-cuhk/](./mae-cuhk/) — CUHK BEng MAE curriculum (foundational reference)
+
 Repository for self-studying PolyU MSc Intelligent Robotics Engineering.
