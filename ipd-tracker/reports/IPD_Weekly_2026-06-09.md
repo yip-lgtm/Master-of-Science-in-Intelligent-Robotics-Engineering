@@ -2,7 +2,9 @@
 
 **Week**: 24 (2026)
 **Date**: 2026-06-09
-**Engineer**: Yip (MHKIE candidate)
+**Engineer**: KANG YIP SZE 施耿業 (Assistant Engineer, Geotechnical)
+**ICE No.**: 093984510 (GMICE) | **HKIE No.**: GW0968329
+**Mentor**: Dr. Alberto Ortigão (CEng FICE)
 **Project**: 悅麗苑 Yuet Lai Court 11NW-A/C16 斜坡維修工程
 **Status**: Remedial works ongoing (Pit-by-pit no-fines concrete + soil nailing + I&M)
 

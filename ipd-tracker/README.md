@@ -1,13 +1,15 @@
 # ICE IPD / CPD / DAP Progress Tracker
 
-> **Auto-tracks ICE IPD 7 Attributes evidence from real project work**
-> **Project**: 悅麗苑 Yuet Lai Court 11NW-A/C16 斜坡維修工程
-> **Stage**: Remedial works (Pit-by-pit no-fines concrete + soil nailing + I&M)
+> **KANG YIP SZE 施耿業 — Assistant Engineer (Geotechnical)**
+> **ICE No.**: 093984510 (GMICE) | **HKIE No.**: GW0968329
+> **Mentor**: Dr. Alberto Ortigão (CEng FICE) | **Company**: Kam Tat Surveyors LTD
+> **Route**: Mentor-supported Training → CEng MICE / MHKIE (General Experience)
+> **Period**: Aug 2025 – May 2026 (v2.0)
 
 ## 🎯 What This Does
 
 A weekly cron-driven tool that:
-1. **Reads** your existing DAP.xlsx (32 tasks 100% achieved in 2025)
+1. **Reads** your existing DAP.xlsx (5 sheets: Cover/CPD/DAP/Work/Mentor)
 2. **Auto-generates** 5 new DAP tasks from current project work
 3. **Maps** each task to ICE 7 Attributes (2022 onwards)
 4. **Generates** bilingual (中/英) weekly report
@@ -18,86 +20,87 @@ A weekly cron-driven tool that:
 
 ```
 ipd-tracker/
-├── DAP.xlsx                      # 32 (2025) + 5 (2026) = 37 tasks
+├── DAP.xlsx                      # 5 sheets: Cover/CPD/DAP/Work/Mentor
 ├── reports/
 │   └── IPD_Weekly_YYYY-MM-DD.md  # Weekly reports
-├── evidence/                     # Upload evidence here
+├── evidence/                     # Original logbooks (input)
+│   ├── CPD_Logbook_KANG_YIP_SZE_ICE_IPD_Complete.xlsx
+│   └── KANG_YIP_SZE_CPD_IPD_Logbook_v2_June2026.xlsx
 ├── templates/
 │   └── IPD_Online_Template.md    # IPD Online format
 └── README.md
 ```
 
-## 🏃 Quick Start
+## 📊 Current Status (as of 2026-06-09)
+
+| Metric | Value |
+|--------|-------|
+| **CPD Hours Total** | 94.5 h (ICE recommends ≥30/year) ✅ EXCEEDS |
+| **CPD Entries** | 27 (mix of self-study + formal events) |
+| **DAP Tasks Historical** | 21 (20 Achieved, 1 In Progress) |
+| **DAP Tasks New (Jun 2026)** | 5 (yellow highlight) |
+| **Work Experience** | 5 projects (YLC, MW01, I&M, etc.) |
+| **Mentor Meetings** | 3 (Jan/Apr/May 2026) |
+
+## 📈 Hours by ICE Attribute
+
+| # | Attribute | Hours | Status |
+|---|-----------|-------|--------|
+| 1 | Understanding and Practical Application of Engineering | 28.5 | ✅ Strong |
+| 2 | Management and Control | 18.0 | ✅ Strong |
+| 3 | Commercial Ability / Health, Safety and Welfare | 3.0 | ⚠️ Medium |
+| 4 | Sustainable Development | 4.5 | ⚠️ Medium |
+| 5 | Communication | 12.0 | ✅ Strong |
+| 6 | Professional Commitment and Ethical Conduct | 10.5 | ✅ Strong |
+| 7 | Technical Leadership | 22.0 | ✅ Strong |
+
+## 📋 Existing 5 Projects (Work Experience)
+
+1. **Yuet Lai Court Dangerous Hillside Order (Kwai Chung)** — FOS 0.870 → 1.4 after remediation
+2. **Kwai Chung Lai Cho Road — 4-year I&M contract**
+3. **Minor Works Class 1 — Metal Protective Barriers (Yau Lai Estate)**
+4. **MBIS/MWIS Tender Preparation & Submission**
+5. **FSI Submissions & Minor Works Statutory Compliance**
+
+## 📅 Recent Mentor Meetings
+
+| Date | Type | Key Outcomes |
+|------|------|--------------|
+| 2026-01-14 | Initial Setup | Approved route, focus on slope/geotech |
+| 2026-04-13 | Mid-IPD Review | YLC FOS 0.870, more commercial exposure needed |
+| 2026-05-20 | Portfolio Prep (planned) | Final sign-off target end June 2026 |
+
+## 🚀 Quick Start
 
 ```bash
-# Run weekly (default: this Monday's report)
+# Run weekly
 python3 /app/skills/cpd_ipd_dap_progress_cron.py
 
-# Use custom DAP path
-python3 /app/skills/cpd_ipd_dap_progress_cron.py --dap /path/to/DAP.xlsx
-
-# Custom output directory
-python3 /app/skills/cpd_ipd_dap_progress_cron.py --output-dir /custom/reports
+# Rebuild DAP.xlsx from real logbooks
+python3 /app/skills/build_dap_from_logbooks.py
 ```
-
-## 📋 ICE IPD 7 Attributes (2022)
-
-| # | Attribute | Chinese |
-|---|-----------|---------|
-| 1 | Understanding and Practical Application of Engineering | 工程學理解與應用 |
-| 2 | Management and Control | 管理與執行 |
-| 3 | Health, Safety and Welfare | 健康、安全與福利 |
-| 4 | Sustainable Development | 可持續發展 |
-| 5 | Communication | 溝通 |
-| 6 | Professional Commitment and Ethical Conduct | 專業承諾與道德 |
-| 7 | Technical Leadership | 技術領導力 |
-
-## 🎓 Current DAP Tasks (37 total)
-
-### 2025 Tasks (32, all Achieved ✅)
-- **GI (5)**: Survey, mapping, trial pits, sampling, GW monitoring
-- **Design (8)**: SLOPE/W, PLAXIS 3D, soil nail, drainage, manual, BD submission
-- **Tender (3)**: Tender docs, assessment, contract award
-- **Construction (16)**: H&S plan, MS, RA, PTW, supervision, monitoring, pit work, soil nails
-
-### 2026 Tasks (5, new this week — yellow highlight)
-1. **YLC-Remedial-01** — Pit-by-pit no-fines concrete replacement 施工監督 (Attr 1, 2, 3, 7)
-2. **YLC-Remedial-02** — Soil nail installation + pull-out test (Attr 1, 3, 5, 6)
-3. **YLC-Monitoring-01** — Bi-weekly monitoring report (Attr 1, 3, 5, 7)
-4. **YLC-CPD-Leadership** — Internal lunch-and-learn (Attr 7 ⭐)
-5. **YLC-Sustainability-01** — Drainage re-check + Maintenance Manual (Attr 2, 4, 5)
 
 ## 🔄 Cron Setup
 
 ```bash
-# Every Monday 8:00 AM HKT
-openclaw cron add \
-  --name "ICE_IPD_Weekly" \
-  --cron "0 8 * * 1" \
-  --tz "Asia/Hong_Kong" \
-  --system-event "cpd_ipd_dap_progress_cron" \
-  --wake now
+openclaw cron add --name "ICE_IPD_Weekly" \
+  --cron "0 8 * * 1" --tz "Asia/Hong_Kong" \
+  --system-event "cpd_ipd_dap_progress_cron" --wake now
 ```
 
-## 💡 3 Things To Do Now
+## 💡 Immediate Action Items (from mentor feedback)
 
-1. **Execute** — Pick 1-2 new tasks, start + photo/sign record (strongest evidence)
-2. **Mentor discussion** — Schedule with Dr. Alberto Ortigão, share this report
-3. **Tech talk** — Prepare internal lunch-and-learn (YLC case study) for Attr 7 + CPD hours
+1. **Continue** — keep logging CPD (already at 94.5h, exceeds 30h/year target)
+2. **More commercial exposure** — mentor flagged this gap in Apr 2026 review
+3. **Mock PR** — completed May 2026 workshop, target sign-off by end June 2026
+4. **IStructE CM** — consider next year (post-CEng MICE)
 
 ## 🔗 Related Skills
 
-- `bootcamp_weekly.py` — 24-Week Bootcamp weekly reminder
+- `cpd_ipd_dap_progress_cron.py` — Weekly tracker
+- `build_dap_from_logbooks.py` — Build/merge DAP from raw .xlsx
+- `bootcamp_weekly.py` — 24-Week Bootcamp
 - `bootcamp_sunday_summary.py` — Sunday reflection
 - `bootcamp_log.py` — Quick progress logger
-- `cpd_ipd_dap_progress_cron.py` — IPD/DAP tracker (this file)
-
-## 📊 Why This Works
-
-- **Auto-mapping** — Task → Attributes 自動, 你唔使諗
-- **Bilingual** — 中英並列, IPD Online 同 internal 用都得
-- **CPD filling** — 自動 identify Attributes 缺口 + suggest 活動
-- **Yellow highlight** — 你 review 過先 confirm, 唔會盲 add
-- **DAP.xlsx 直接** — 唔使人手輸入 Excel
 
 **Last Updated:** 2026-06-09
