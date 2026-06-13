@@ -4,7 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Hybrid 3R + Soft Gripper (Mobile)</title>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Gripper">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIHJ4PSIyMCIgZmlsbD0iIzFhMWEyZSIvPjxwYXRoIGQ9Ik0zMCA1MCBROTAgNTAgNTAgODAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzRhOTBlMiIgc3Ryb2tlLXdpZHRoPSI4Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI4MCIgcj0iMTAiIGZpbGw9IiM0YTkwZTIiLz48L3N2Zz4=">
+  <title>Hybrid 3R + Soft Gripper (PWA)</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -76,7 +81,7 @@
 <body>
   <h2>🦑 Hybrid 3R Arm + Soft Gripper</h2>
   <div class="info">
-    <div>State: <strong id="state" style="color:#e67e22">APPROACH</strong> | Pressure: <strong id="pressure" style="color:#9b59b6">0</strong> kPa | Gap: <strong id="gap" style="color:#27ae60">100</strong> mm</div>
+    <div>State: <strong id="state" style="color:#e67e22">APPROACH</strong> | P: <strong id="pressure" style="color:#9b59b6">0</strong> kPa | Gap: <strong id="gap" style="color:#27ae60">100</strong> mm | F: <strong id="force" style="color:#e74c3c">0.0</strong> N</div>
   </div>
 
   <canvas id="canvas" width="380" height="500"></canvas>
@@ -93,6 +98,7 @@
     <br>
     <button onclick="reset()">🔄 Reset</button>
     <button onclick="autoDemo()">▶️ Auto Demo</button>
+    <button id="installBtn" style="display:none; background:#27ae60;" onclick="installPWA()">📲 Install</button>
   </div>
 
   <div class="legend">
@@ -408,6 +414,80 @@
 
     // Start
     draw();
+
+    // ============================
+    // PWA: Register Service Worker
+    // ============================
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js')
+          .then((reg) => console.log('SW registered:', reg.scope))
+          .catch((err) => console.log('SW failed:', err));
+      });
+    }
+
+    // PWA: Install prompt
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBtn = document.getElementById('installBtn');
+      if (installBtn) installBtn.style.display = 'inline-block';
+    });
+
+    function installPWA() {
+      if (!deferredPrompt) {
+        alert('To install:\n\n📱 iOS: Share → Add to Home Screen\n🤖 Android: Menu → Install App');
+        return;
+      }
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((result) => {
+        if (result.outcome === 'accepted') console.log('PWA installed');
+        deferredPrompt = null;
+        const installBtn = document.getElementById('installBtn');
+        if (installBtn) installBtn.style.display = 'none';
+      });
+    }
+
+    // ============================
+    // Force Feedback Computation
+    // ============================
+    function computeContactForce() {
+      const points = forwardKinematics();
+      const eeX = points[3].x;
+      const eeY = points[3].y;
+      const distToObj = Math.sqrt(
+        (eeX - objectPos.x) ** 2 + (eeY - objectPos.y) ** 2
+      );
+      const contactThreshold = 50;
+      if (distToObj > contactThreshold) return 0;
+      // Proximity-based contact force
+      const proximity = 1 - distToObj / contactThreshold;
+      const baseForce = proximity * 2.5;
+      // Add grip force when in GRIP/HOLD/LIFT
+      let gripForce = 0;
+      if (currentState === 'GRIP' || currentState === 'HOLD' || currentState === 'LIFT') {
+        gripForce = getGripForce();
+      }
+      // Add impact on SOFT_CONTACT
+      let impact = 0;
+      if (currentState === 'SOFT_CONTACT') impact = 0.5;
+      return Math.min(10, baseForce + gripForce + impact);
+    }
+
+    // Update force display in info bar (60ms interval)
+    setInterval(() => {
+      const f = computeContactForce();
+      const forceEl = document.getElementById('force');
+      if (forceEl) {
+        forceEl.textContent = f.toFixed(1);
+        // Color: green (safe) → orange (caution) → red (high)
+        if (f < 2) forceEl.style.color = '#27ae60';
+        else if (f < 5) forceEl.style.color = '#f39c12';
+        else forceEl.style.color = '#e74c3c';
+      }
+    }, 60);
+
   </script>
 </body>
 </html>
