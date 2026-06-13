@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Hybrid 3R + Soft Gripper (Mobile)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      min-height: 100vh;
+      padding: 10px;
+    }
+    h2 { text-align: center; margin: 5px 0; font-size: 20px; }
+    .info {
+      text-align: center;
+      font-size: 14px;
+      margin: 8px;
+      padding: 8px;
+      background: rgba(74, 144, 226, 0.1);
+      border-radius: 8px;
+      border: 1px solid #4a90e2;
+    }
+    canvas {
+      border: 2px solid #4a90e2;
+      background: #0d1525;
+      display: block;
+      margin: 10px auto;
+      touch-action: none;
+      border-radius: 8px;
+      max-width: 100%;
+    }
+    .controls {
+      text-align: center;
+      padding: 10px;
+    }
+    button {
+      padding: 12px 18px;
+      margin: 5px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      background: #4a90e2;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 80px;
+    }
+    button:active {
+      transform: scale(0.95);
+      background: #2c5f9e;
+    }
+    button.state-btn { background: #e67e22; }
+    button.state-btn.active { background: #27ae60; box-shadow: 0 0 10px #27ae60; }
+    button.pressure-btn { background: #9b59b6; }
+    .legend {
+      font-size: 11px;
+      text-align: center;
+      margin-top: 10px;
+      opacity: 0.7;
+    }
+    .swatch {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      margin: 0 3px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <h2>🦑 Hybrid 3R Arm + Soft Gripper</h2>
+  <div class="info">
+    <div>State: <strong id="state" style="color:#e67e22">APPROACH</strong> | Pressure: <strong id="pressure" style="color:#9b59b6">0</strong> kPa | Gap: <strong id="gap" style="color:#27ae60">100</strong> mm</div>
+  </div>
+
+  <canvas id="canvas" width="380" height="500"></canvas>
+
+  <div class="controls">
+    <button class="state-btn" onclick="setState('APPROACH')">APPROACH</button>
+    <button class="state-btn" onclick="setState('GRIP')">GRIP</button>
+    <button class="state-btn" onclick="setState('HOLD')">HOLD</button>
+    <button class="state-btn" onclick="setState('RELEASE')">RELEASE</button>
+    <br>
+    <button class="pressure-btn" onclick="adjustPressure(20)">+20 kPa</button>
+    <button class="pressure-btn" onclick="adjustPressure(50)">+50 kPa</button>
+    <button class="pressure-btn" onclick="adjustPressure(-20)">−20 kPa</button>
+    <br>
+    <button onclick="reset()">🔄 Reset</button>
+    <button onclick="autoDemo()">▶️ Auto Demo</button>
+  </div>
+
+  <div class="legend">
+    <span class="swatch" style="background:#4a90e2"></span> Rigid Arm
+    <span class="swatch" style="background:#e74c3c"></span> Soft Gripper
+    <span class="swatch" style="background:#f1c40f"></span> Object
+  </div>
+
+  <script>
+    // Canvas setup
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Resize canvas for high-DPI screens
+    function resizeCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // State
+    let currentState = "APPROACH";
+    let pressure = 0;
+    let armAngles = [30, 45, -20]; // degrees
+    let targetAngles = [30, 45, -20];
+    let animationFrame = null;
+    let autoMode = false;
+    let autoStep = 0;
+    let contactForce = 0;
+
+    // Object position
+    const objectPos = { x: 260, y: 250 };
+    const objectWidth = 30;
+
+    // Color scheme
+    const colors = {
+      arm: '#4a90e2',
+      gripper: '#e74c3c',
+      gripperHeld: '#c0392b',
+      object: '#f1c40f',
+      objectHeld: '#f39c12',
+      stateColors: {
+        'APPROACH': '#4a90e2',
+        'SOFT_CONTACT': '#f39c12',
+        'GRIP': '#e67e22',
+        'HOLD': '#27ae60',
+        'LIFT': '#16a085',
+        'RELEASE': '#95a5a6'
+      }
+    };
+
+    // Forward kinematics
+    function forwardKinematics() {
+      const cx = 190, cy = 420;
+      const linkLengths = [120, 110, 90];
+      let points = [{x: cx, y: cy}];
+      let angle = 0;
+
+      for (let i = 0; i < 3; i++) {
+        angle += armAngles[i];
+        const rad = angle * Math.PI / 180;
+        const last = points[points.length - 1];
+        points.push({
+          x: last.x + linkLengths[i] * Math.cos(rad),
+          y: last.y - linkLengths[i] * Math.sin(rad)
+        });
+      }
+      return points;
+    }
+
+    // Smoothly interpolate angles
+    function updateAngles() {
+      for (let i = 0; i < 3; i++) {
+        armAngles[i] += (targetAngles[i] - armAngles[i]) * 0.1;
+      }
+    }
+
+    // Gap calculation (PCC-inspired)
+    function getGripperGap() {
+      return Math.max(10, 100 - pressure * 0.9);
+    }
+
+    // Grip force estimate
+    function getGripForce() {
+      return pressure * 0.5;
+    }
+
+    // State setters
+    function setState(state) {
+      currentState = state;
+      autoMode = false;
+      document.getElementById('state').textContent = state;
+      document.getElementById('state').style.color = colors.stateColors[state];
+
+      // Adjust arm based on state
+      if (state === 'APPROACH') {
+        targetAngles = [30, 45, -20];
+      } else if (state === 'SOFT_CONTACT') {
+        targetAngles = [40, 50, -15];
+      } else if (state === 'GRIP') {
+        targetAngles = [40, 50, -15];
+      } else if (state === 'HOLD') {
+        targetAngles = [40, 50, -15];
+      } else if (state === 'LIFT') {
+        targetAngles = [50, 30, -10];
+      } else if (state === 'RELEASE') {
+        targetAngles = [10, 60, -25];
+      }
+    }
+
+    function adjustPressure(delta) {
+      pressure = Math.max(0, Math.min(100, pressure + delta));
+      document.getElementById('pressure').textContent = pressure.toFixed(0);
+      document.getElementById('gap').textContent = getGripperGap().toFixed(0);
+    }
+
+    function reset() {
+      currentState = 'APPROACH';
+      pressure = 0;
+      armAngles = [30, 45, -20];
+      targetAngles = [30, 45, -20];
+      contactForce = 0;
+      autoMode = false;
+      autoStep = 0;
+      document.getElementById('state').textContent = 'APPROACH';
+      document.getElementById('state').style.color = colors.stateColors['APPROACH'];
+      document.getElementById('pressure').textContent = '0';
+      document.getElementById('gap').textContent = '100';
+    }
+
+    function autoDemo() {
+      reset();
+      autoMode = true;
+      autoStep = 0;
+    }
+
+    // Auto demo sequence
+    function runAutoDemo() {
+      if (!autoMode) return;
+      autoStep++;
+      
+      if (autoStep === 30) setState('SOFT_CONTACT');
+      if (autoStep === 60) setState('GRIP');
+      if (autoStep === 65) adjustPressure(60);
+      if (autoStep === 100) setState('HOLD');
+      if (autoStep === 140) setState('LIFT');
+      if (autoStep === 180) setState('RELEASE');
+      if (autoStep === 185) adjustPressure(-60);
+      if (autoStep === 220) {
+        autoMode = false;
+        autoStep = 0;
+      }
+    }
+
+    // Main draw loop
+    function draw() {
+      updateAngles();
+      runAutoDemo();
+      
+      ctx.clearRect(0, 0, 380, 500);
+      
+      // Background grid
+      ctx.strokeStyle = 'rgba(74, 144, 226, 0.1)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 380; i += 30) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, 500);
+        ctx.stroke();
+      }
+      for (let i = 0; i < 500; i += 30) {
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(380, i);
+        ctx.stroke();
+      }
+
+      // State indicator background
+      ctx.fillStyle = colors.stateColors[currentState] + '30';
+      ctx.fillRect(0, 0, 380, 30);
+
+      // Draw object
+      const isHeld = currentState === 'HOLD' || currentState === 'LIFT';
+      ctx.fillStyle = isHeld ? colors.objectHeld : colors.object;
+      ctx.beginPath();
+      ctx.ellipse(objectPos.x, objectPos.y, objectWidth, objectWidth * 1.3, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = isHeld ? '#d68910' : '#d4ac0d';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = 'white';
+      ctx.font = '10px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('Object', objectPos.x, objectPos.y + 3);
+
+      // Draw 3R arm
+      const points = forwardKinematics();
+      ctx.strokeStyle = colors.arm;
+      ctx.lineWidth = 10;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      for (let i = 0; i < points.length - 1; i++) {
+        ctx.beginPath();
+        ctx.moveTo(points[i].x, points[i].y);
+        ctx.lineTo(points[i+1].x, points[i+1].y);
+        ctx.stroke();
+      }
+
+      // Draw joints
+      ctx.fillStyle = '#fff';
+      for (let i = 1; i < points.length - 1; i++) {
+        ctx.beginPath();
+        ctx.arc(points[i].x, points[i].y, 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // End-effector
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(points[3].x, points[3].y, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Draw soft gripper
+      const endX = points[3].x;
+      const endY = points[3].y;
+      const endAngle = (armAngles[0] + armAngles[1] + armAngles[2]) * Math.PI / 180;
+      const gripperBend = pressure * 0.8;
+      const gap = getGripperGap();
+
+      ctx.strokeStyle = isHeld ? colors.gripperHeld : colors.gripper;
+      ctx.lineWidth = 14;
+      ctx.lineCap = 'round';
+
+      // Left finger
+      ctx.beginPath();
+      ctx.moveTo(endX, endY);
+      const leftAngle = endAngle - gripperBend * 0.4;
+      const leftLength = 55 + pressure * 0.2;
+      ctx.lineTo(
+        endX + leftLength * Math.cos(leftAngle),
+        endY - leftLength * Math.sin(leftAngle)
+      );
+      ctx.stroke();
+
+      // Right finger
+      ctx.beginPath();
+      ctx.moveTo(endX, endY);
+      const rightAngle = endAngle + gripperBend * 0.4;
+      const rightLength = 55 + pressure * 0.2;
+      ctx.lineTo(
+        endX + rightLength * Math.cos(rightAngle),
+        endY - rightLength * Math.sin(rightAngle)
+      );
+      ctx.stroke();
+
+      // Highlight object if grasped
+      if (Math.abs(gap - objectWidth) < 15 && pressure > 30) {
+        ctx.strokeStyle = '#27ae60';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(objectPos.x, objectPos.y, objectWidth + 8, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Info overlay
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(10, 450, 360, 40);
+      ctx.fillStyle = 'white';
+      ctx.font = '12px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`State: ${currentState}`, 20, 465);
+      ctx.fillText(`P: ${pressure.toFixed(0)} kPa | Gap: ${gap.toFixed(0)} mm | F: ${getGripForce().toFixed(1)} N`, 20, 482);
+
+      animationFrame = requestAnimationFrame(draw);
+    }
+
+    // Touch support for arm control
+    let touchStartX = 0, touchStartY = 0;
+    canvas.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const dx = touch.clientX - touchStartX;
+      const dy = touch.clientY - touchStartY;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        targetAngles[1] = Math.max(0, Math.min(90, targetAngles[1] + dx * 0.1));
+      } else {
+        targetAngles[0] = Math.max(0, Math.min(90, targetAngles[0] - dy * 0.1));
+      }
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+    });
+
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+      if (e.key === '1') setState('APPROACH');
+      if (e.key === '2') setState('GRIP');
+      if (e.key === '3') setState('HOLD');
+      if (e.key === '4') setState('RELEASE');
+      if (e.key === 'ArrowUp') adjustPressure(10);
+      if (e.key === 'ArrowDown') adjustPressure(-10);
+      if (e.key === ' ') { e.preventDefault(); autoDemo(); }
+    });
+
+    // Start
+    draw();
+  </script>
+</body>
+</html>
