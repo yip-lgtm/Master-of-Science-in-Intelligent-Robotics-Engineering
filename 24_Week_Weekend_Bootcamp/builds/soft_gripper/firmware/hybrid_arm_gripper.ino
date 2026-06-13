@@ -88,7 +88,10 @@ unsigned long stateTimeIn() { return millis() - stateStartTime; }
 // State machine thresholds
 const float FORCE_CONTACT_THRESHOLD = 0.5;   // N, transition to SOFT_CONTACT
 const float FORCE_GRIP_THRESHOLD = 2.0;      // N, transition to GRIP
+const float FORCE_LIFT_MIN = 1.5;            // N, MIN force required before LIFT
 const unsigned long GRIP_HOLD_TIME = 1000;   // ms, time in GRIP before HOLD
+const unsigned long HOLD_STABLE_TIME = 800;  // ms, force must be stable this long
+const float FORCE_STABILITY_TOLERANCE = 0.3; // N, max force variation for "stable"
 
 // Pressure control
 const float TARGET_PRESSURE = 60.0;          // kPa, target for GRIP
@@ -135,6 +138,12 @@ unsigned long lastSensorRead = 0;
 unsigned long lastStatusPrint = 0;
 const unsigned long SENSOR_INTERVAL = 50;    // ms (20 Hz)
 const unsigned long PRINT_INTERVAL = 300;    // ms (3.3 Hz)
+
+// Grip stability tracking (for LIFT gate)
+float forceHistory[10] = {0};      // Last 10 force readings
+int forceHistoryIdx = 0;
+unsigned long stableStartTime = 0;
+bool forceStable = false;
 
 // ==================== SETUP ====================
 void setup() {
@@ -200,6 +209,9 @@ void runStateMachine() {
       moveToPosition(POS_IDLE);
       setPump(false);
       setValves(false, false);
+      // Reset all one-shot signal flags for next cycle
+      // (Note: liftSignalSent and dropSignalSent are static inside
+      //  their respective cases, so they're reset on function re-entry)
       break;
 
     case APPROACH:
@@ -252,6 +264,24 @@ void runStateMachine() {
         lastReGripTime = millis();
         // Briefly increase pressure
         targetPressure = min(MAX_PRESSURE, targetPressure + 10);
+        forceStable = false;  // Reset stability
+        stableStartTime = 0;
+      }
+      // === LIFT GATE: only allow LIFT if grip is confirmed stable ===
+      updateForceStability();
+      if (forceStable && currentForce >= FORCE_LIFT_MIN) {
+        if (stableStartTime == 0) {
+          stableStartTime = millis();
+          Serial.println(F("Grip stable. Confirming..."));
+        } else if (millis() - stableStartTime > HOLD_STABLE_TIME) {
+          // Force has been stable for HOLD_STABLE_TIME → ready to lift
+          Serial.println(F("✓ GRIP CONFIRMED — ready for LIFT"));
+          changeState(LIFT);
+        }
+      } else {
+        // Force not stable or too low
+        stableStartTime = 0;
+        forceStable = false;
       }
       break;
 
@@ -259,18 +289,39 @@ void runStateMachine() {
       moveToPosition(POS_LIFT);
       // Maintain grip
       applyPressurePID();
+      // Send LIFT_START signal (one-time)
+      static bool liftSignalSent = false;
+      if (!liftSignalSent) {
+        Serial.println(F("[CMD] LIFT_START"));
+        liftSignalSent = false;  // re-arm for next cycle
+        // Reset for next cycle
+        // Note: liftSignalSent reset in RELEASE
+      }
+      // Wait for arm to reach lift position
+      // (In single-Arduino setup, this is instantaneous;
+      //  in dual-Arduino setup, would wait for [ACK] LIFT_DONE)
       break;
 
     case RELEASE:
       moveToPosition(POS_RELEASE);
       setPump(false);
       setValves(false, false);
+      // Send LIFT_DROP signal (for 3R arm to return to home)
+      static bool dropSignalSent = false;
+      if (!dropSignalSent) {
+        Serial.println(F("[CMD] LIFT_DROP"));
+        dropSignalSent = true;
+      }
       // Wait for pressure to drop, then go to IDLE
       if (currentPressure < 5.0 && stateTimeIn() > 1500) {
-        // Reset target pressure
+        // Reset target pressure + PID + stability tracking
         targetPressure = TARGET_PRESSURE;
         pidIntegral = 0;
         pidLastError = 0;
+        forceStable = false;
+        stableStartTime = 0;
+        // Reset signal flags for next cycle
+        // (Re-arm by re-entering RELEASE next time)
         changeState(IDLE);
       }
       break;
@@ -308,6 +359,23 @@ void applyPressurePID() {
     setPump(false);
     setValves(false, false);
   }
+}
+
+// ==================== FORCE STABILITY DETECTION ====================
+// Tracks last 10 force readings. If all are within FORCE_STABILITY_TOLERANCE
+// of each other, force is considered "stable" (good grip).
+void updateForceStability() {
+  // Add current force to history
+  forceHistory[forceHistoryIdx] = currentForce;
+  forceHistoryIdx = (forceHistoryIdx + 1) % 10;
+
+  // Check stability: max - min within tolerance?
+  float fMin = forceHistory[0], fMax = forceHistory[0];
+  for (int i = 1; i < 10; i++) {
+    if (forceHistory[i] < fMin) fMin = forceHistory[i];
+    if (forceHistory[i] > fMax) fMax = forceHistory[i];
+  }
+  forceStable = ((fMax - fMin) < FORCE_STABILITY_TOLERANCE);
 }
 
 // ==================== SAFETY CHECKS ====================
