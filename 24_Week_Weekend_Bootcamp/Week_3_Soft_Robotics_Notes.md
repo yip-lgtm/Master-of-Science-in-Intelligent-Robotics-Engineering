@@ -335,4 +335,205 @@ void loop() {
 
 **加油! Soft robotics 係 IRE 最有 paradigm-shifting 嘅 topic** 🦑💪
 
-— KANG YIP SZE, 13 June 2026
+---
+
+## 13. Integration Concept: Soft Gripper + 3R Arm (Yip's Hybrid Design)
+
+### 13.1 Architecture Diagram (Mermaid)
+
+```mermaid
+graph TB
+    subgraph "Control Layer"
+        PC[💻 PC / Arduino]
+        SM[State Machine]
+        FB[Force Feedback Loop]
+    end
+
+    subgraph "Rigid Layer (Existing 3R Arm)"
+        BASE[Base + Servo 1<br/>Shoulder]
+        UPPER[Upper Arm + Servo 2<br/>Elbow]
+        FORE[Forearm + Servo 3<br/>Wrist]
+    end
+
+    subgraph "Interface Layer"
+        MOUNT[Modular Mount<br/>Quick-release]
+    end
+
+    subgraph "Soft Layer (NEW)"
+        F1[Finger 1: Ecoflex<br/>Pneumatic Chamber]
+        F2[Finger 2: Ecoflex<br/>Pneumatic Chamber]
+        VALVE[Solenoid Valves x2<br/>12V + 100 kPa]
+        PSENS[Pressure Sensor<br/>0-100 kPa]
+    end
+
+    PC --> SM
+    SM --> BASE
+    SM --> UPPER
+    SM --> FORE
+    SM --> VALVE
+    VALVE --> F1
+    VALVE --> F2
+    F1 --> PSENS
+    F2 --> PSENS
+    PSENS --> FB
+    FB --> SM
+    FORE --> MOUNT
+    MOUNT --> F1
+    MOUNT --> F2
+
+    style F1 fill:#90EE90
+    style F2 fill:#90EE90
+    style BASE fill:#87CEEB
+    style UPPER fill:#87CEEB
+    style FORE fill:#87CEEB
+    style MOUNT fill:#FFD700
+```
+
+### 13.2 State Machine Extension (Mermaid State Diagram)
+
+```mermaid
+stateDiagram-v2
+    [*] --> APPROACH
+    APPROACH --> SOFT_CONTACT : Force > 0.5N
+    SOFT_CONTACT --> GRIP : Force stable<br/>Object detected
+    GRIP --> HOLD : Pressure = 60 kPa<br/>Force > 2N
+    HOLD --> LIFT : Force stable 1s
+    LIFT --> RELEASE : User command<br/>or task done
+    HOLD --> READJUST : Slip detected<br/>Force < 1N
+    READJUST --> GRIP : +10 kPa
+    RELEASE --> [*] : Pressure = 0
+```
+
+### 13.3 Control Flow (Mermaid Sequence)
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant SM as State Machine
+    participant R as Rigid Arm (PID)
+    participant V as Valves
+    participant F as Soft Gripper
+    participant P as Pressure Sensor
+    participant FS as Force Sensor
+
+    U->>SM: APPROACH command
+    SM->>R: Move to (x, y, z)
+    R->>FS: Read contact force
+    FS-->>SM: Force = 0N (no contact)
+    SM->>R: Slow down
+    R->>FS: Read again
+    FS-->>SM: Force = 0.8N (contact!)
+    SM->>SM: Transition to SOFT_CONTACT
+    SM->>V: Open valve 1
+    V->>F: Pressurise finger 1
+    SM->>V: Open valve 2
+    V->>F: Pressurise finger 2
+    P-->>SM: Pressure = 30 kPa
+    SM->>SM: Ramp to GRIP state
+    loop Force Closed-Loop
+        P-->>SM: Current pressure
+        FS-->>SM: Current force
+        SM->>V: Adjust pressure
+    end
+    SM->>SM: HOLD + LIFT
+    SM->>R: Lift object
+    U->>SM: RELEASE command
+    SM->>V: Depressurise
+    SM->>R: Move to drop position
+```
+
+### 13.4 Hardware BOM (Bill of Materials)
+
+| Item | Qty | Cost (HK$) | Source |
+|------|----:|-----------:|--------|
+| Ecoflex 00-30 (1kg kit) | 1 | 350 | Smooth-On |
+| 3D printed mold (PLA) | 1 | 50 | Local print shop |
+| Silicone tubing (4mm ID) | 2m | 40 | McMaster |
+| 12V solenoid valves (NC) | 2 | 200 | Amazon |
+| Arduino Uno | 1 | 80 | Local |
+| Pressure sensor (0-100kPa) | 1 | 120 | AliExpress |
+| 12V power supply | 1 | 60 | Local |
+| Quick-release mount (3D print) | 1 | 30 | Local print |
+| Air compressor (small, 12V) | 1 | 250 | Amazon |
+| Wire + connectors | 1 set | 50 | Local |
+| **Total BOM cost** | — | **~1,230** | — |
+
+### 13.5 Timeline (Week 3-4 implementation)
+
+| Day | Task | Hours |
+|-----|------|------:|
+| Sat 1 | Mold design (Fusion 360) | 2h |
+| Sat 1 | Print mold (or wait for print) | (parallel) |
+| Sun 1 | Pour Ecoflex, cure 4h | 1h |
+| Sat 2 | Demold + attach tubing | 1h |
+| Sat 2 | Wire valves + Arduino | 2h |
+| Sat 2 | Test pneumatic actuation | 1h |
+| Sun 2 | Calibrate pressure sensor | 1h |
+| Sun 2 | Integrate state machine | 2h |
+| Sat 3 | Test grip on egg | 2h |
+| Sun 3 | Iterate, document, push to GitHub | 2h |
+| **Total** | | **~14h** |
+
+### 13.6 Why This Hybrid Design Works
+
+✅ **Rigid arm strength**: Precision, payload, repeatability
+✅ **Soft gripper advantage**: Safety, adaptability, delicate handling
+✅ **Modular mount**: Easy to swap (vacuum, magnetic, parallel jaws)
+✅ **Force feedback reuse**: Existing sensors work
+✅ **State machine extensibility**: Just add new states
+✅ **Cost effective**: ~HK$1,200 for full prototype
+✅ **Educational value**: Demonstrates IRE core competencies
+
+### 13.7 Stretch Goals (after Week 3)
+
+1. **Closed-loop pressure control** (PID on pressure)
+2. **Vision-based object detection** (YOLOv8 + camera)
+3. **Grasp planning** (force-vector optimisation)
+4. **Multi-finger** (3 or 4 fingers for stable grasp)
+5. **Tactile sensing** (add EGaIn strain sensors)
+6. **ML-based grasp prediction** (learn from successful grasps)
+
+---
+
+## 14. Recommended Reading (3 Foundational Papers)
+
+### Paper 1: Rus & Tolley (2015) — Nature
+**"Design, fabrication and control of soft robots"** *Nature*, 521(7553), 467-475.
+
+**Why read**: Foundational review. Covers materials, actuators, fabrication, modeling, control, applications.
+
+**Key takeaways for Yip**:
+- Soft robotics applications: delicate grasping, safe human interaction
+- Start with Pneumatic + SMA (matches Week 3 deliverable)
+- Modular + hybrid design = best path for 3R arm + soft gripper
+
+### Paper 2: Polygerinos et al. (2017) — Advanced Engineering Materials
+**"Soft robotics: Review of fluid-driven intrinsically soft devices"**
+
+**Key takeaways**:
+- Pneumatic chamber design comparison (straight, bending, twisting)
+- Sensor integration (matches your force feedback)
+- 2-finger and multi-finger gripper case studies
+- Hysteresis and modeling challenges (matches soft_actuator_sim.py)
+
+### Paper 3: Laschi et al. (2016) — Advanced Robotics
+**"Soft robot arm inspired by the octopus"**
+
+**Key takeaways**:
+- Continuum robotics + Cosserat rod modeling
+- Hybrid rigid-soft design principles
+- **Connects to Yip's geotechnical background**: soil constitutive models (Mohr-Coulomb) ≈ soft material hyperelastic models (Neo-Hookean, Ogden)
+
+---
+
+**Week 3 完整 package 已 ready**:
+- ✅ 12 sections of foundational notes
+- ✅ Mermaid integration diagrams (architecture + state + sequence)
+- ✅ BOM + timeline
+- ✅ 3 recommended papers
+- ✅ Python PCC simulation (soft_actuator_sim.py)
+- ✅ Arduino code template
+
+**Next**: Build physical prototype or extend simulation. **Phase 3 (Week 13)** will revisit for advanced topics.
+
+— KANG YIP SZE, 13 June 2026 🦑💪🦞
